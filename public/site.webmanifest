@@ -1,0 +1,14 @@
+{
+  "name": "MUSIC.LAB",
+  "short_name": "MUSIC.LAB",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#FF6F00",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

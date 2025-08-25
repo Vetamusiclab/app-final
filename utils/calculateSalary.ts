@@ -1,3 +1,4 @@
+// utils/calculateSalary.ts
 import { Tariffs } from "@/lib/tariffs";
 import { TutorLevel } from "@/types/user";
 

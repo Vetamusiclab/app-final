@@ -1,11 +1,23 @@
-import { Tariffs, TutorLevel } from "@/lib/tariffs";
+import { Tariffs } from "@/lib/tariffs";
+import { TutorLevel } from "@/types/user";
 
-type LessonMeta = { minutes: 45 | 60, pair?: boolean, kids30?: boolean, group45?: boolean };
+export type LessonMeta = {
+  minutes: number;
+  pair?: boolean;
+  kids30?: boolean;
+  group45?: boolean;
+};
 
-export function calculateLessonPrice(level: TutorLevel, intensive: boolean, meta: LessonMeta): number {
+export function calculateLessonPrice(
+  level: TutorLevel,
+  intensive: boolean,
+  meta: LessonMeta
+): number {
   const group = intensive ? Tariffs[level].Intensive : Tariffs[level].Light;
-  if (meta.kids30) return group.kids30;
-  if (meta.group45) return group.group45;
-  if (meta.pair && meta.minutes === 60) return group.pair60;
+
+  if (meta.kids30 && "kids30" in group) return group.kids30;
+  if (meta.group45 && "group45" in group) return group.group45;
+  if (meta.pair && meta.minutes === 60 && "pair60" in group) return group.pair60;
+
   return group[String(meta.minutes) as "45" | "60"];
 }

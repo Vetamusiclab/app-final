@@ -30,6 +30,7 @@ export function calculateLessonPrice(
   throw new Error('Невозможно рассчитать цену для указанных опций');
 }
 
+
 };
 
 export default SalaryCalculator;

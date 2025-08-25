@@ -1,10 +1,11 @@
-import type { Role } from './auth';
+// types/user.ts
 
-export interface User {
+export type TutorLevel = 'Basic' | 'Progressive' | 'Prive';
+
+export type User = {
   id: string;
-  role: Role;
   name: string;
-  email: string;
-  avatarUrl?: string;
-  directions?: string[]; // вокал, гитара и т.д.
-}
+  role: 'student' | 'teacher' | 'admin';
+  avatar?: string;
+  tutorLevel?: TutorLevel;
+};

@@ -55,12 +55,9 @@ export default function SalaryCalculator({ level }: Props) {
         </label>
       </div>
 
-      <p className="font-semibold">Цена: {price} ₽</p>
-    </div>
-  );
-}
-
-      <div className="mt-4 text-lg">Цена: <b>{price}₽</b></div>
+      <div className="mt-4 text-lg">
+        Цена: <b>{price} ₽</b>
+      </div>
     </div>
   );
 }

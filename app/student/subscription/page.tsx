@@ -1,26 +1,35 @@
 'use client';
-import React, { useState } from 'react';
-import Select from '@/components/ui/Select';
 
-const directions = ['Гитара', 'Вокал', 'Фортепиано', 'Барабаны'] as const;
-type Direction = (typeof directions)[number];
+import { useState } from 'react';
 
-const subscriptions: Record<Direction, string> = {
-  Гитара: 'Light — 1 занятие в неделю',
-  Вокал: 'Intensive — 2 занятия в неделю',
-  Фортепиано: 'Light — 1 занятие в неделю',
-  Барабаны: 'Intensive — 2 занятия в неделю',
+const subscriptions: Record<string, string> = {
+  Гитара: 'Абонемент на гитару',
+  Вокал: 'Абонемент на вокал',
+  Фортепиано: 'Абонемент на фортепиано',
+  Барабаны: 'Абонемент на барабаны',
 };
 
 const SubscriptionPage = () => {
-  const [selected, setSelected] = useState<Direction>(directions[0]);
+  const [selected, setSelected] = useState<string>('Гитара');
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Абонемент</h1>
-      {directions.length > 1 && (
-        <Select options={directions} value={selected} onChange={setSelected} />
-      )}
+      <h1 className="text-2xl font-bold">Ваши абонементы</h1>
+      <div className="mt-4">
+        <label htmlFor="direction" className="block mb-2">Выберите направление:</label>
+        <select
+          id="direction"
+          value={selected}
+          onChange={(e) => setSelected(e.target.value)}
+          className="border p-2 rounded"
+        >
+          {Object.keys(subscriptions).map((dir) => (
+            <option key={dir} value={dir}>
+              {dir}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="mt-4">
         <p>Ваш абонемент: {subscriptions[selected]}</p>
       </div>
@@ -28,9 +37,4 @@ const SubscriptionPage = () => {
   );
 };
 
-export default SubscriptionPage;
-
-  );
-};
-
-export default SubscriptionPage;
+export default

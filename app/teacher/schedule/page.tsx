@@ -1,37 +1,36 @@
 'use client';
+
 import React from 'react';
 
-const TeacherSchedulePage = () => {
-  const schedule = [
-    { day: 'Понедельник', time: '17:00-18:00', subject: 'Гитара', student: 'Анна' },
-    { day: 'Среда', time: '16:00-17:00', subject: 'Вокал', student: 'Маша' },
-  ];
+const teacherSchedule = [
+  { day: 'Понедельник', time: '10:00 - 11:00', student: 'Иван', subject: 'Гитара' },
+  { day: 'Среда', time: '12:00 - 13:00', student: 'Мария', subject: 'Вокал' },
+];
 
+export default function TeacherSchedulePage() {
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Расписание преподавателя</h1>
+      <h1 className="text-2xl font-bold">Расписание преподавателя</h1>
       <table className="mt-4 border-collapse border border-gray-300 w-full">
         <thead>
           <tr>
-            <th className="border border-gray-300 px-2 py-1">День</th>
-            <th className="border border-gray-300 px-2 py-1">Время</th>
-            <th className="border border-gray-300 px-2 py-1">Предмет</th>
-            <th className="border border-gray-300 px-2 py-1">Ученик</th>
+            <th className="border p-2">День</th>
+            <th className="border p-2">Время</th>
+            <th className="border p-2">Ученик</th>
+            <th className="border p-2">Предмет</th>
           </tr>
         </thead>
         <tbody>
-          {schedule.map((s, i) => (
-            <tr key={i}>
-              <td className="border border-gray-300 px-2 py-1">{s.day}</td>
-              <td className="border border-gray-300 px-2 py-1">{s.time}</td>
-              <td className="border border-gray-300 px-2 py-1">{s.subject}</td>
-              <td className="border border-gray-300 px-2 py-1">{s.student}</td>
+          {teacherSchedule.map((item, idx) => (
+            <tr key={idx}>
+              <td className="border p-2">{item.day}</td>
+              <td className="border p-2">{item.time}</td>
+              <td className="border p-2">{item.student}</td>
+              <td className="border p-2">{item.subject}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
   );
-};
-
-export default TeacherSchedulePage;
+}

@@ -1,45 +1,40 @@
 'use client';
-import React, { useState } from 'react';
-import Select from '@/components/ui/Select';
 
-const SchedulePage = () => {
-  const directions = ['Гитара', 'Вокал', 'Фортепиано', 'Барабаны'];
-  const [selected, setSelected] = useState(directions[0]);
+import React from 'react';
 
-  const schedule = [
-    { day: 'Понедельник', time: '17:00-18:00', subject: 'Гитара', teacher: 'Иванова' },
-    { day: 'Среда', time: '16:00-17:00', subject: 'Вокал', teacher: 'Петрова' },
-  ];
+const schedule = [
+  { day: 'Понедельник', time: '10:00 - 11:00', subject: 'Гитара', teacher: 'Анна' },
+  { day: 'Среда', time: '12:00 - 13:00', subject: 'Вокал', teacher: 'Ирина' },
+];
 
-  const filtered = schedule.filter((s) => s.subject === selected);
-
+export default function SchedulePage() {
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Расписание</h1>
-      {directions.length > 1 && (
-        <Select options={directions} value={selected} onChange={setSelected} />
-      )}
+      <h1 className="text-2xl font-bold">Расписание</h1>
       <table className="mt-4 border-collapse border border-gray-300 w-full">
         <thead>
           <tr>
-            <th className="border border-gray-300 px-2 py-1">День</th>
-            <th className="border border-gray-300 px-2 py-1">Время</th>
-            <th className="border border-gray-300 px-2 py-1">Предмет</th>
-            <th className="border border-gray-300 px-2 py-1">Преподаватель</th>
+            <th className="border p-2">День</th>
+            <th className="border p-2">Время</th>
+            <th className="border p-2">Предмет</th>
+            <th className="border p-2">Преподаватель</th>
           </tr>
         </thead>
         <tbody>
-          {filtered.map((s, i) => (
-            <tr key={i}>
-              <td className="border border-gray-300 px-2 py-1">{s.day}</td>
-              <td className="border border-gray-300 px-2 py-1">{s.time}</td>
-              <td className="border border-gray-300 px-2 py-1">{s.subject}</td>
-              <td className="border border-gray-300 px-2 py-1">{s.teacher}</td>
+          {schedule.map((item, idx) => (
+            <tr key={idx}>
+              <td className="border p-2">{item.day}</td>
+              <td className="border p-2">{item.time}</td>
+              <td className="border p-2">{item.subject}</td>
+              <td className="border p-2">{item.teacher}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
   );
 };
 

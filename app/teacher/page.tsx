@@ -1,10 +1,21 @@
-export const dynamic = "force-dynamic";
+'use client';
+import React from 'react';
+import Link from 'next/link';
 
-export default function TeacherPage() {
+const TeacherPage = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Кабинет преподавателя</h1>
-      <p>Добро пожаловать! Здесь будет управление расписанием и зарплатой.</p>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Преподаватель</h1>
+      <div className="flex flex-col gap-2">
+        <Link href="/teacher/schedule" className="btn border px-2 py-1 rounded">
+          Расписание
+        </Link>
+        <Link href="/teacher/salary" className="btn border px-2 py-1 rounded">
+          Зарплата
+        </Link>
+      </div>
     </div>
   );
-}
+};
+
+export default TeacherPage;

@@ -1,10 +1,22 @@
-export const dynamic = "force-dynamic";
+'use client';
+import React, { useState } from 'react';
+import Select from '@/components/ui/Select';
 
-export default function StudentPage() {
+const StudentPage = () => {
+  const directions = ['Гитара', 'Вокал', 'Фортепиано', 'Барабаны'];
+  const [selected, setSelected] = useState(directions[0]);
+
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Личный кабинет ученика</h1>
-      <p>Добро пожаловать! Здесь будут ваши занятия, абонементы и уведомления.</p>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Привет, студент!</h1>
+      {directions.length > 1 && (
+        <Select options={directions} value={selected} onChange={setSelected} />
+      )}
+      <div className="mt-4">
+        <p>Вы выбрали направление: {selected}</p>
+      </div>
     </div>
   );
-}
+};
+
+export default StudentPage;

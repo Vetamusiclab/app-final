@@ -35,8 +35,3 @@ export default function SchedulePage() {
     </div>
   );
 }
-
-  );
-};
-
-export default SchedulePage;

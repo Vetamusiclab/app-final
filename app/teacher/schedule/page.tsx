@@ -1,8 +1,10 @@
-export default function TeacherSchedule(){
+export const dynamic = "force-dynamic";
+
+export default function TeacherSchedulePage() {
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Расписание (общая сетка)</h2>
-      <div className="card">Редактирование расписания — в следующем спринте. Пока заглушка.</div>
+    <div className="p-6">
+      <h1 className="text-2xl font-semibold mb-4">Моё расписание</h1>
+      <p>Здесь преподаватель сможет управлять занятиями.</p>
     </div>
   );
 }

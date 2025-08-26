@@ -1,15 +1,14 @@
 // types/user.ts
 
-// Уровни наставников
 export type TutorLevel = 'Basic' | 'Progressive' | 'Prive';
+export type UserRole = 'student' | 'teacher' | 'admin';
 
-// Тип пользователя
-export type User = {
+export interface User {
   id: string;
+  role: UserRole;
   name: string;
-  role: 'student' | 'teacher' | 'admin';
-  avatar?: string;
+  email?: string;
+  avatarUrl?: string;
   tutorLevel?: TutorLevel;
-  email?: string; // добавлено поле email
-  directions?: string[]; // для учеников с направлениями
-};
+  directions?: string[]; // для учеников: вокал, гитара и т.д.
+}

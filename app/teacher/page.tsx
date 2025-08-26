@@ -1,13 +1,10 @@
-import StudentCard from "@/components/teacher/StudentCard";
+export const dynamic = "force-dynamic";
 
-export default function TeacherHome(){
-  const students = [
-    { id: "stu1", name: "Иван Петров", directions: ["Гитара","Вокал"] },
-    { id: "stu2", name: "Анна Смирнова", directions: ["Фортепиано"] },
-  ];
+export default function TeacherPage() {
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {students.map(s => <StudentCard key={s.id} {...s} />)}
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-4">Кабинет преподавателя</h1>
+      <p>Добро пожаловать! Здесь будет управление расписанием и зарплатой.</p>
     </div>
   );
 }

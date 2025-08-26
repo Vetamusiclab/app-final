@@ -1,4 +1,5 @@
 'use client';
+
 import React from 'react';
 
 interface SelectProps {
@@ -7,20 +8,18 @@ interface SelectProps {
   onChange: (value: string) => void;
 }
 
-const Select: React.FC<SelectProps> = ({ options, value, onChange }) => {
+export default function Select({ options, value, onChange }: SelectProps) {
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="border rounded px-2 py-1"
+      className="border p-2 rounded"
     >
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
         </option>
       ))}
     </select>
   );
-};
-
-export default Select;
+}

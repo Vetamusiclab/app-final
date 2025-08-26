@@ -9,14 +9,17 @@ const subscriptions: Record<string, string> = {
   Барабаны: 'Абонемент на барабаны',
 };
 
-const SubscriptionPage = () => {
+export default function SubscriptionPage() {
   const [selected, setSelected] = useState<string>('Гитара');
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold">Ваши абонементы</h1>
+
       <div className="mt-4">
-        <label htmlFor="direction" className="block mb-2">Выберите направление:</label>
+        <label htmlFor="direction" className="block mb-2">
+          Выберите направление:
+        </label>
         <select
           id="direction"
           value={selected}
@@ -30,11 +33,14 @@ const SubscriptionPage = () => {
           ))}
         </select>
       </div>
+
       <div className="mt-4">
         <p>Ваш абонемент: {subscriptions[selected]}</p>
       </div>
     </div>
   );
+}
+
 };
 
 export default

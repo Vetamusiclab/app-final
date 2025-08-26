@@ -5,13 +5,14 @@ import React from 'react';
 const schedule = [
   { day: 'Понедельник', time: '10:00 - 11:00', subject: 'Гитара', teacher: 'Анна' },
   { day: 'Среда', time: '12:00 - 13:00', subject: 'Вокал', teacher: 'Ирина' },
+  { day: 'Пятница', time: '14:00 - 15:00', subject: 'Фортепиано', teacher: 'Елена' },
 ];
 
 export default function SchedulePage() {
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold">Расписание</h1>
-      <table className="mt-4 border-collapse border border-gray-300 w-full">
+      <h1 className="text-2xl font-bold mb-4">Расписание</h1>
+      <table className="border-collapse border border-gray-300 w-full">
         <thead>
           <tr>
             <th className="border p-2">День</th>

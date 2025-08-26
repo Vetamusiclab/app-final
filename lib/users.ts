@@ -1,3 +1,4 @@
+// lib/users.ts
 import type { User } from "@/types/user";
 
 export const demoUsers: User[] = [

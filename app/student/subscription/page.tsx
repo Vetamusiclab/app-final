@@ -40,7 +40,3 @@ export default function SubscriptionPage() {
     </div>
   );
 }
-
-};
-
-export default

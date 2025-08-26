@@ -1,10 +1,10 @@
-import ScheduleTable from "@/components/student/ScheduleTable";
+export const dynamic = "force-dynamic";
 
-export default function StudentSchedule(){
+export default function StudentSchedulePage() {
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Расписание</h2>
-      <ScheduleTable studentId="stu1" />
+    <div className="p-6">
+      <h1 className="text-2xl font-semibold mb-4">Моё расписание</h1>
+      <p>Здесь будет отображаться календарь и список занятий.</p>
     </div>
   );
 }

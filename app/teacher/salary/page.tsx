@@ -1,12 +1,35 @@
-export const dynamic = "force-dynamic";
+'use client';
+import React from 'react';
 
-import SalaryCalculator from "@/components/teacher/SalaryCalculator";
+const TeacherSalaryPage = () => {
+  const salaryData = [
+    { week: '1 неделя', lessons: 5, total: 12500 },
+    { week: '2 неделя', lessons: 4, total: 10000 },
+  ];
 
-export default function TeacherSalaryPage() {
   return (
-    <div className="p-6 space-y-4">
-      <h2 className="text-2xl font-semibold">Зарплата</h2>
-      <SalaryCalculator />
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Зарплата преподавателя</h1>
+      <table className="mt-4 border-collapse border border-gray-300 w-full">
+        <thead>
+          <tr>
+            <th className="border border-gray-300 px-2 py-1">Неделя</th>
+            <th className="border border-gray-300 px-2 py-1">Количество уроков</th>
+            <th className="border border-gray-300 px-2 py-1">Сумма, ₽</th>
+          </tr>
+        </thead>
+        <tbody>
+          {salaryData.map((s, i) => (
+            <tr key={i}>
+              <td className="border border-gray-300 px-2 py-1">{s.week}</td>
+              <td className="border border-gray-300 px-2 py-1">{s.lessons}</td>
+              <td className="border border-gray-300 px-2 py-1">{s.total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
+
+export default TeacherSalaryPage;

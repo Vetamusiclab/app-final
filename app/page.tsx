@@ -1,28 +1,18 @@
-import Link from "next/link";
+'use client';
 
-export default function HomePage(){
+export default function Home() {
   return (
-    <div className="grid lg:grid-cols-2 gap-6 items-center">
-      <div className="space-y-4">
-        <h1 className="text-4xl font-bold">Творческая Лаборатория Веты Гулливер</h1>
-        <p className="text-black/70">
-          Современная музыкальная школа: вокал, гитара, фортепиано, барабаны.
-        </p>
-        <div className="flex gap-3">
-          <Link href="/login/role" className="btn btn-primary">Войти</Link>
-          <a href="#" className="btn btn-ghost">Узнать больше</a>
-        </div>
-      </div>
-      <div className="card">
-        <div className="text-sm">Фирменные цвета</div>
-        <div className="flex gap-2 mt-2">
-          <div className="w-10 h-10 rounded-2xl bg-[var(--brand-orange)]" title="#FF6F00"/>
-          <div className="w-10 h-10 rounded-2xl bg-[var(--brand-lime)]" title="#6BCB77"/>
-          <div className="w-10 h-10 rounded-2xl bg-[var(--brand-black)]" title="#000000"/>
-          <div className="w-10 h-10 rounded-2xl bg-[var(--brand-sand)]" title="#FFE0B2"/>
-          <div className="w-10 h-10 rounded-2xl bg-[var(--brand-white)] border" title="#FFFFFF"/>
-        </div>
-      </div>
-    </div>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-purple-700 to-indigo-900 text-white">
+      <h1 className="text-5xl font-bold mb-6">Добро пожаловать в MusicLab</h1>
+      <p className="text-lg mb-8 max-w-xl text-center">
+        Онлайн-платформа для музыкантов и учеников. Здесь можно учиться, заниматься и развиваться.
+      </p>
+      <a
+        href="#"
+        className="px-6 py-3 rounded-2xl bg-white text-purple-700 font-semibold shadow-lg hover:bg-gray-100 transition"
+      >
+        Начать
+      </a>
+    </main>
   );
 }

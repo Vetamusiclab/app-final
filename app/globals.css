@@ -1,0 +1,22 @@
+/* app/globals.css */
+
+/* Сброс стилей */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  color: #222;
+}
+
+/* Центровка контейнера */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}

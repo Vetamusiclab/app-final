@@ -2,13 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Общие стили для всего приложения */
-html, body {
-  height: 100%;
-  font-family: 'Inter', sans-serif;
+/* Шрифты */
+:root {
+  --font-sans: var(--font-roboto), sans-serif;
+  --font-alt: var(--font-pt-sans), sans-serif;
+
+  /* Цветовая палитра */
+  --color-primary: #FF6F00;
+  --color-accent: #6BCB77;
+  --color-bg: #FFFFFF;
+  --color-bg-alt: #FFE0B2;
+  --color-contrast: #000000;
+  --color-text: #333333;
 }
 
-/* Градиентный фон и белый текст по умолчанию */
 body {
-  @apply bg-gradient-to-br from-purple-700 to-indigo-900 text-white;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+/* Утилиты для цветов */
+.text-primary {
+  color: var(--color-primary);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-accent {
+  background-color: var(--color-accent);
+}
+
+.text-text {
+  color: var(--color-text);
 }

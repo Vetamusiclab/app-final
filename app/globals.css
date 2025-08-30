@@ -11,7 +11,6 @@
   --color-primary: #FF6F00;
   --color-accent: #6BCB77;
   --color-bg: #FFFFFF;
-  --color-bg-alt: #FFE0B2;
   --color-contrast: #000000;
   --color-text: #333333;
 }
@@ -34,6 +33,10 @@ body {
 
 .bg-accent {
   background-color: var(--color-accent);
+}
+
+.bg-bg {
+  background-color: var(--color-bg);
 }
 
 .text-text {

@@ -1,22 +1,14 @@
-/* app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Сброс стилей */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* Общие стили для всего приложения */
 html, body {
   height: 100%;
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-  color: #222;
+  font-family: 'Inter', sans-serif;
 }
 
-/* Центровка контейнера */
-main {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+/* Градиентный фон и белый текст по умолчанию */
+body {
+  @apply bg-gradient-to-br from-purple-700 to-indigo-900 text-white;
 }

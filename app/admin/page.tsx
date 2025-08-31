@@ -1,7 +1,12 @@
-export default function AdminPage() {
+'use client';
+
+export default function AdminDashboard() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white">
-      <h1 className="text-3xl font-bold text-primary">Страница админа</h1>
-    </main>
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Добро пожаловать в админ-панель</h1>
+      <p className="text-lg text-gray-600">
+        Выберите раздел в меню слева для управления платформой.
+      </p>
+    </div>
   );
 }

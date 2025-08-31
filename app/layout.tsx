@@ -2,7 +2,6 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Roboto, PT_Sans } from 'next/font/google'
 
-// Подключаем два шрифта
 const roboto = Roboto({
   subsets: ['latin', 'cyrillic'],
   weight: ['400', '500', '700'],
@@ -16,8 +15,9 @@ const ptSans = PT_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'MusicLab — Творческая Лаборатория Веты Гулливер',
+  title: 'Творческая Лаборатория Веты Гулливер — MusicLab',
   description: 'Онлайн-платформа для музыкантов и учеников',
+  themeColor: '#ffffff',
 }
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className={`${roboto.variable} ${ptSans.variable}`}>
-      <body className="font-sans text-text bg-gradient-to-br from-[#fff5f0] via-[#ff8c42] to-[#b23a48] min-h-screen">
+      <body className="font-sans bg-white text-[#111111] antialiased">
         {children}
       </body>
     </html>

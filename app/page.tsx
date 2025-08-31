@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
@@ -52,4 +52,10 @@ export default function Home() {
               onClick={() => setShowLoginOptions(false)}
             >
               Закрыть
-            </
+            </button>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

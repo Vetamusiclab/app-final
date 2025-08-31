@@ -2,43 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Шрифты */
+/* Базовые переменные бренда — на будущее */
 :root {
-  --font-sans: var(--font-roboto), sans-serif;
-  --font-alt: var(--font-pt-sans), sans-serif;
-
-  /* Цветовая палитра */
-  --color-primary: #FF6F00;
-  --color-accent: #6BCB77;
-  --color-bg: #FFFFFF;
-  --color-contrast: #000000;
-  --color-text: #333333;
+  --brand-primary: #B23A48; /* бордовый */
+  --brand-accent:  #FF8C42; /* оранжевый */
+  --brand-text:    #111111; /* почти чёрный */
+  --brand-bg:      #FFFFFF; /* белый */
 }
 
+/* Сброс и сглаживание */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
-  font-family: var(--font-sans);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  min-height: 100vh;
+  margin: 0;
+  background: var(--brand-bg);
+  color: var(--brand-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Утилиты для цветов */
-.text-primary {
-  color: var(--color-primary);
-}
-
-.bg-primary {
-  background-color: var(--color-primary);
-}
-
-.bg-accent {
-  background-color: var(--color-accent);
-}
-
-.bg-bg {
-  background-color: var(--color-bg);
-}
-
-.text-text {
-  color: var(--color-text);
+/* Утилита для заголовков на PT Sans (из next/font) */
+.font-pt-sans {
+  font-family: var(--font-pt-sans), system-ui, -apple-system, Segoe UI, Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
 }

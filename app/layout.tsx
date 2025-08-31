@@ -17,7 +17,7 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'Творческая Лаборатория Веты Гулливер — MusicLab',
   description: 'Онлайн-платформа для музыкантов и учеников',
-  themeColor: '#ffffff',
+  themeColor: '#F5F5F5', // наш фон, а не белый
 }
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru" className={`${roboto.variable} ${ptSans.variable}`}>
-      <body className="font-sans bg-white text-[#111111] antialiased">
+      <body className="font-ptsans bg-bg text-text antialiased">
         {children}
       </body>
     </html>

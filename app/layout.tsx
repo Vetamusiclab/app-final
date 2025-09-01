@@ -1,35 +1,30 @@
-import './globals.css'
-import type { Metadata } from 'next'
-import { Roboto, PT_Sans } from 'next/font/google'
+import type { Metadata } from "next";
+import "./globals.css";
+import { Roboto, PT_Sans } from "next/font/google";
 
 const roboto = Roboto({
-  subsets: ['latin', 'cyrillic'],
-  weight: ['400', '500', '700'],
-  variable: '--font-roboto',
-})
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "700"],
+  variable: "--font-roboto",
+});
 
 const ptSans = PT_Sans({
-  subsets: ['latin', 'cyrillic'],
-  weight: ['400', '700'],
-  variable: '--font-pt-sans',
-})
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "700"],
+  variable: "--font-pt-sans",
+});
 
 export const metadata: Metadata = {
-  title: 'Творческая Лаборатория Веты Гулливер — MusicLab',
-  description: 'Онлайн-платформа для музыкантов и учеников',
-  themeColor: '#F5F5F5', // наш фон, а не белый
-}
+  title: "MUSIC.LAB",
+  description: "Онлайн-платформа для учеников и преподавателей",
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${roboto.variable} ${ptSans.variable}`}>
-      <body className="font-ptsans bg-bg text-text antialiased">
+    <html lang="ru">
+      <body className={`${roboto.variable} ${ptSans.variable} antialiased bg-white text-[#333333]`}>
         {children}
       </body>
     </html>
-  )
+  );
 }

@@ -1,74 +1,33 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { motion } from "framer-motion";
 
-export default function Home() {
-  const [showLoginOptions, setShowLoginOptions] = useState(false);
-  const router = useRouter();
-
-  const goToRole = (role: string) => {
-    setShowLoginOptions(false);
-    // переходим на страницу входа для выбранной роли
-    router.push(`/login/${role}`);
-  };
-
+export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-bg text-text text-center px-4">
-      {/* Логотип (положи public/logo.png) */}
-      <div className="mb-6">
-        <Image src="/logo.png" alt="Логотип" width={120} height={120} priority />
-      </div>
-
-      {/* Заголовок — чёрный текст */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-10 text-text">
-        Творческая Лаборатория <br /> Веты Гулливер
-      </h1>
-
-      {/* Кнопка Войти */}
-      <button
-        onClick={() => setShowLoginOptions(true)}
-        className="px-8 py-3 bg-primary text-white font-semibold rounded-2xl shadow-lg hover:bg-accent transition"
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="text-3xl font-bold text-[#FF6F00]"
       >
-        Войти
-      </button>
+        Добро пожаловать в MUSIC.LAB
+      </motion.h1>
 
-      {/* Модальное окно выбора роли */}
-      {showLoginOptions && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-2xl shadow-2xl w-80 text-center">
-            <h3 className="text-lg font-bold mb-4 text-[#111]">Выберите роль</h3>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => goToRole('student')}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-accent transition"
-              >
-                Ученик
-              </button>
-              <button
-                onClick={() => goToRole('teacher')}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-accent transition"
-              >
-                Преподаватель
-              </button>
-              <button
-                onClick={() => goToRole('admin')}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-accent transition"
-              >
-                Админ
-              </button>
-            </div>
-
-            <button
-              className="mt-6 text-sm text-[#333] hover:underline"
-              onClick={() => setShowLoginOptions(false)}
-            >
-              Назад
-            </button>
-          </div>
-        </div>
-      )}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="flex flex-col gap-4"
+      >
+        <Link
+          href="/login"
+          className="rounded-2xl bg-[#6BCB77] px-6 py-3 text-lg font-semibold text-white shadow-md hover:scale-105 transition"
+        >
+          Войти
+        </Link>
+      </motion.div>
     </main>
   );
 }

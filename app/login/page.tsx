@@ -1,62 +1,56 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
-export default function LoginPage() {
+export default function RoleSelectPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // 🔒 тут позже подключим логику авторизации
-    console.log('Login with:', email, password);
-    router.push('/dashboard'); // временно редиректим в "будущий кабинет"
-  };
+  const roles = [
+    { label: "Ученик", icon: "🎓", value: "student" },
+    { label: "Преподаватель", icon: "🎵", value: "teacher" },
+    { label: "Админ", icon: "🛠️", value: "admin" },
+  ];
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-bg via-white to-bg px-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-text mb-6">
-          Вход в систему
-        </h2>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-2xl font-bold text-[#FF6F00]"
+      >
+        Выберите роль
+      </motion.h1>
 
-        {/* Форма логина */}
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          <input
-            type="password"
-            placeholder="Пароль"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-
-          <button
-            type="submit"
-            className="w-full py-3 bg-primary text-white font-semibold rounded-xl shadow-md hover:bg-accent transition"
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {roles.map((role, i) => (
+          <motion.div
+            key={role.value}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.2 }}
           >
-            Войти
-          </button>
-        </form>
-
-        {/* Кнопка Назад */}
-        <button
-          onClick={() => router.back()}
-          className="mt-4 w-full py-2 text-sm text-gray-600 hover:underline"
-        >
-          Назад
-        </button>
+            <Card
+              className="cursor-pointer rounded-2xl border border-[#FFE0B2] p-6 text-center shadow-md hover:scale-105 transition"
+              onClick={() => router.push(`/login/${role.value}`)}
+            >
+              <CardContent>
+                <div className="text-5xl mb-2">{role.icon}</div>
+                <div className="text-lg font-semibold">{role.label}</div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
       </div>
+
+      <button
+        onClick={() => router.push("/")}
+        className="mt-6 text-[#6BCB77] hover:underline"
+      >
+        Назад на главную
+      </button>
     </main>
   );
 }

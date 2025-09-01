@@ -1,32 +1,34 @@
-// components/admin/AdminSidebar.tsx
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 export default function AdminSidebar() {
-  return (
-    <aside className="w-64 min-h-screen bg-white/90 border-r border-gray-100 p-6 sticky top-0">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 relative">
-          <Image src="/logo.png" alt="MusicLab" fill style={{ objectFit: 'contain' }} />
-        </div>
-        <div>
-          <div className="text-lg font-bold">MusicLab</div>
-          <div className="text-xs text-gray-500">Панель администратора</div>
-        </div>
-      </div>
+  const pathname = usePathname();
 
-      <nav className="space-y-2 text-sm">
-        <Link href="/admin" className="block px-3 py-2 rounded hover:bg-gray-100">Главная</Link>
-        <Link href="/admin/users" className="block px-3 py-2 rounded hover:bg-gray-100">Пользователи</Link>
-        <Link href="/admin/schedule" className="block px-3 py-2 rounded hover:bg-gray-100">Расписание</Link>
-        <Link href="/admin/reports" className="block px-3 py-2 rounded hover:bg-gray-100">Отчёты</Link>
-        <Link href="/admin/import" className="block px-3 py-2 rounded hover:bg-gray-100">Импорт</Link>
-        <div className="mt-4 border-t pt-4">
-          <Link href="/" className="block px-3 py-2 rounded hover:bg-gray-100">На сайт</Link>
-          <button className="w-full text-left px-3 py-2 rounded hover:bg-gray-100">Выйти</button>
-        </div>
+  const links = [
+    { href: '/admin', label: 'Главная' },
+    { href: '/admin/users', label: 'Пользователи' },
+    { href: '/admin/settings', label: 'Настройки' },
+  ];
+
+  return (
+    <aside className="w-64 bg-white shadow-md h-screen p-6">
+      <h2 className="text-xl font-bold mb-6">Админ-панель</h2>
+      <nav className="flex flex-col gap-3">
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`px-4 py-2 rounded-lg transition ${
+              pathname === link.href
+                ? 'bg-primary text-white'
+                : 'hover:bg-gray-100 text-gray-800'
+            }`}
+          >
+            {link.label}
+          </Link>
+        ))}
       </nav>
     </aside>
   );

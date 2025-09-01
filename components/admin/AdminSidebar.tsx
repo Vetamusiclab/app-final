@@ -1,29 +1,30 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const links = [
+  { href: "/admin", label: "Главная" },
+  { href: "/admin/users", label: "Пользователи" },
+  { href: "/admin/courses", label: "Курсы" },
+  { href: "/admin/settings", label: "Настройки" },
+];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
 
-  const links = [
-    { href: '/admin', label: 'Главная' },
-    { href: '/admin/users', label: 'Пользователи' },
-    { href: '/admin/settings', label: 'Настройки' },
-  ];
-
   return (
-    <aside className="w-64 bg-white shadow-md h-screen p-6">
-      <h2 className="text-xl font-bold mb-6">Админ-панель</h2>
-      <nav className="flex flex-col gap-3">
+    <aside className="w-64 bg-[#f5f5f5] p-4 border-r border-gray-200">
+      <h2 className="mb-6 text-xl font-bold text-[#111]">Админ-панель</h2>
+      <nav className="flex flex-col gap-2">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className={`px-4 py-2 rounded-lg transition ${
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
               pathname === link.href
-                ? 'bg-primary text-white'
-                : 'hover:bg-gray-100 text-gray-800'
+                ? "bg-[#6BCB77] text-white"
+                : "text-gray-700 hover:bg-gray-200"
             }`}
           >
             {link.label}

@@ -1,28 +1,68 @@
+/* app/globals.css */
+
+/* Tailwind directives (если Tailwind настроен) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Базовые переменные бренда — на будущее */
+/* === Брендовые переменные (изменяйте под ваши корпоративные цвета) === */
 :root {
-  --brand-primary: #B23A48; /* бордовый */
-  --brand-accent:  #FF8C42; /* оранжевый */
-  --brand-text:    #111111; /* почти чёрный */
-  --brand-bg:      #FFFFFF; /* белый */
+  /* Основной акцент (кнопки, ссылки) — предлагаю фиолет как умеренный, поменяйте при желании */
+  --color-primary: #6C5CE7; /* фиолет / корпоративный акцент */
+  --color-primary-700: #5a4bd6;
+  --color-accent: #FF7A59; /* дополнительный акцент (при необходимости) */
+  --text-default: #0b0b0b; /* основной текст — чёрный как просили */
+  --bg-soft: #FBFAFC; /* мягкий фон */
+  --card-bg: #ffffff;
 }
 
-/* Сброс и сглаживание */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  background: var(--brand-bg);
-  color: var(--brand-text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Минимальные базовые стили */
+html, body, #__next {
+  height: 100%;
+  background: var(--bg-soft);
+  color: var(--text-default);
 }
 
-/* Утилита для заголовков на PT Sans (из next/font) */
-.font-pt-sans {
-  font-family: var(--font-pt-sans), system-ui, -apple-system, Segoe UI, Roboto,
-    'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+/* Утилиты простые для кнопок */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-block;
+  box-shadow: 0 8px 18px rgba(108,92,231,0.12);
+  transition: transform .12s ease, opacity .12s ease;
 }
+.btn-primary:hover { transform: translateY(-2px); opacity: 0.98; }
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.06);
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+}
+
+/* Сайдбар небольшой визуал */
+.admin-sidebar {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));
+}
+
+/* Заголовок главной строго чёрный */
+.hero-title {
+  color: var(--text-default);
+}
+
+/* Небольшие карточки */
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15,15,15,0.04);
+  padding: 1rem;
+}
+
+/* Контейнер для админки */
+.admin-main {
+  padding: 2.25rem;
+}
+
+/* Дополнительно, если Tailwind не подхватывает переменную, используйте style attr */

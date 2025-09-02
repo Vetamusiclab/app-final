@@ -1,10 +1,6 @@
 // lib/users.ts
 import type { User } from '@/types/user';
 
-/**
- * Демо-данные пользователей. Хранятся в памяти.
- * Для аватарок положи файл по пути /public/avatars/default.png
- */
 export const demoUsers: User[] = [
   {
     id: 'stu1',
@@ -43,19 +39,13 @@ export const demoUsers: User[] = [
   },
 ];
 
-/** Возвращает всех пользователей (асинхронно, под будущий бэкенд) */
-export async function getAllUsers(): Promise<User[]> {
-  return demoUsers;
+export function getAllUsers(): Promise<User[]> {
+  return Promise.resolve(demoUsers);
 }
 
-/** Находит пользователя по id */
-export async function getUserById(id: string): Promise<User | undefined> {
-  return demoUsers.find((u) => u.id === id);
+export function getUserById(id: string): Promise<User | undefined> {
+  return Promise.resolve(demoUsers.find((u) => u.id === id));
 }
 
-/**
- * Дополнительно даю default-экспорт — на случай,
- * если где-то случайно импортировали по умолчанию.
- */
-const UsersLib = { demoUsers, getAllUsers, getUserById };
-export default UsersLib;
+// реэкспорт типа User — чтобы импорты типа { User } из '@/lib/users' работали
+export type { User };

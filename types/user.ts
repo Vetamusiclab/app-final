@@ -1,13 +1,12 @@
 // types/user.ts
 export type Role = 'student' | 'teacher' | 'admin';
 
-export type User = {
+export interface User {
   id: string;
   role: Role;
   name: string;
-  avatar?: string; // relative path in /public (e.g. '/avatars/default.png')
-  directions?: string[]; // направления (фортепиано, вокал...)
+  avatar?: string;       // путь в /public, напр. '/avatars/default.png'
+  directions?: string[]; // направления (вокал, ф-но и т.п.)
   phone?: string;
   createdAt?: string;
-  // прочие поля при расширении
-};
+}

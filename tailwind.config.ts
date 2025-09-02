@@ -2,21 +2,25 @@
 module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}"
   ],
   theme: {
     extend: {
       colors: {
-        bg: "#F5F5F5",         // светлый фон
-        text: "#222222",       // основной текст
-        primary: "#FF6600",    // фирменный оранжевый
-        accent: "#FF9933",     // более мягкий оранжевый
+        brand: {
+          orange: "#FF6F00",
+          lime: "#6BCB77",
+          sand: "#FFE0B2",
+          black: "#000000",
+          gray: "#333333",
+          white: "#FFFFFF"
+        }
       },
       fontFamily: {
-        roboto: ["var(--font-roboto)", "sans-serif"],
-        ptsans: ["var(--font-pt-sans)", "sans-serif"],
-      },
-    },
+        sans: ["Roboto", "sans-serif"],
+        pt: ["PT Sans", "sans-serif"]
+      }
+    }
   },
-  plugins: [],
-}
+  plugins: []
+};

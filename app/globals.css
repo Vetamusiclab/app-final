@@ -9,10 +9,11 @@
 :root {
   --color-primary: #FF7A59; /* оранжевый — кнопки и акценты */
   --color-primary-700: #e46a49;
-  --color-accent: #FF7A59;
   --text-default: #0b0b0b; /* заголовки — чёрные */
   --bg-soft: #FBFAFC;
   --card-bg: #ffffff;
+  --font-roboto: 'Roboto', sans-serif;
+  --font-pt-sans: 'PT Sans', sans-serif;
 }
 
 /* Базовые стили */
@@ -71,4 +72,38 @@ html, body, #__next {
 /* Отступы/выровн. для hero */
 .hero-container {
   padding: 2rem;
+}
+
+/* --- Доп. стили для кнопок ролей с иконками --- */
+.role-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
+  background: rgba(11,11,11,0.02);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: background .12s ease, transform .12s ease;
+}
+.role-btn:hover { background: rgba(11,11,11,0.04); transform: translateY(-2px); cursor: pointer; }
+
+.role-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white; /* icons will inherit this color */
+  box-shadow: 0 8px 18px rgba(255,122,89,0.12);
+}
+
+/* Модал */
+.modal-card {
+  width: 20rem;
+  border-radius: 14px;
+  padding: 1.25rem;
+  background: white;
+  box-shadow: 0 20px 50px rgba(16,24,40,0.2);
 }

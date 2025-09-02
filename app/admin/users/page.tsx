@@ -8,9 +8,7 @@ export default async function AdminUsersPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">Пользователи</h1>
-      <div className="bg-white p-6 rounded shadow">
-        {/* передаем только данные в клиентский компонент */}
-        {/* Event handlers не передаются из server -> client */}
+      <div className="card">
         <UserList users={users} />
       </div>
     </div>

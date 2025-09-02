@@ -1,6 +1,9 @@
-// lib/sessions.ts
-import { Session } from '@/types/session';
-import { v4 as uuidv4 } from 'uuid';
+// lib/sessions.ts  (версия без uuid)
+import type { Session } from '@/types/session';
+
+// simple id generator (no external dependency)
+const generateId = () =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 
 // demo initial data
 const demoSessions: Session[] = [
@@ -8,7 +11,7 @@ const demoSessions: Session[] = [
     id: 's1',
     teacherId: 't1',
     title: 'Индивидуальный урок — Вокал',
-    start: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // завтра
+    start: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
     end: new Date(Date.now() + 1000 * 60 * 60 * 25).toISOString(),
     status: 'free',
     createdAt: new Date().toISOString(),
@@ -25,7 +28,6 @@ const demoSessions: Session[] = [
   },
 ];
 
-// We mutate this array in memory — note: serverless instances won't persist across cold starts.
 export const sessionsStore: Session[] = [...demoSessions];
 
 export async function getAllSessions(): Promise<Session[]> {
@@ -43,7 +45,7 @@ export async function getSessionById(id: string): Promise<Session | undefined> {
 export async function createSession(partial: Omit<Session, 'id' | 'createdAt'>): Promise<Session> {
   const session: Session = {
     ...partial,
-    id: uuidv4(),
+    id: generateId(),
     createdAt: new Date().toISOString(),
   };
   sessionsStore.push(session);
@@ -62,4 +64,4 @@ export async function deleteSession(id: string): Promise<boolean> {
   if (idx === -1) return Promise.resolve(false);
   sessionsStore.splice(idx, 1);
   return Promise.resolve(true);
-}
+                                            }

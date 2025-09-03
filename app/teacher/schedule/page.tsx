@@ -1,52 +1,24 @@
 // app/teacher/schedule/page.tsx
-'use client';
+import { getAllUsers } from '@/lib/users';
+import TeacherSchedule from '@/components/teacher/TeacherSchedule';
+import type { User } from '@/types/user';
 
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/components/AuthProvider';
-import { useRouter } from 'next/navigation';
-import Schedule from '@/components/teacher/Schedule';
+export const metadata = {
+  title: 'Расписание — Teacher — MusicLab',
+};
 
-export default function TeacherSchedulePageClient() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export default async function TeacherSchedulePage() {
+  const users = await getAllUsers();
+  const teacher: User | undefined = users.find((u) => u.role === 'teacher') ?? users[0];
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    if (user.role !== 'teacher') {
-      setLoading(false);
-      return;
-    }
-    (async () => {
-      try {
-        const res = await fetch(`/api/sessions/teacher/${user.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setSessions(data || []);
-        } else {
-          setSessions([]);
-        }
-      } catch (e) {
-        setSessions([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [user, router]);
-
-  if (loading) return <div>Загрузка...</div>;
-  if (!user) return null;
-  if (user.role !== 'teacher') return <div className="p-4 bg-white rounded shadow">Доступ ограничен — вы не преподаватель.</div>;
+  const teacherId = (teacher as any)?.id ?? 'demo-teacher';
+  const teacherName = teacher?.name ?? 'Преподаватель';
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">Моё расписание</h1>
       <div className="bg-white p-6 rounded shadow">
-        <Schedule sessions={sessions} />
+        <TeacherSchedule teacherId={teacherId} teacherName={teacherName} />
       </div>
     </div>
   );

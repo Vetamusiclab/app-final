@@ -1,18 +1,14 @@
 // app/teacher/schedule/page.tsx
 import { getAllUsers } from '@/lib/users';
 import TeacherSchedule from '@/components/teacher/TeacherSchedule';
-import type { User } from '@/types/user';
 
-export const metadata = {
-  title: 'Расписание — Teacher — MusicLab',
-};
+export const metadata = { title: 'Расписание — Teacher — MusicLab' };
 
 export default async function TeacherSchedulePage() {
   const users = await getAllUsers();
-  const teacher: User | undefined = users.find((u) => u.role === 'teacher') ?? users[0];
-
+  const teacher = users.find((u: any) => u.role === 'teacher') ?? users[0];
   const teacherId = (teacher as any)?.id ?? 'demo-teacher';
-  const teacherName = teacher?.name ?? 'Преподаватель';
+  const teacherName = (teacher as any)?.name ?? 'Преподаватель';
 
   return (
     <div>

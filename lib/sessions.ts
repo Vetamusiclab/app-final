@@ -1,18 +1,17 @@
-// lib/sessions.ts  (версия без uuid)
+// lib/sessions.ts
 import type { Session } from '@/types/session';
 
-// simple id generator (no external dependency)
+// Простой генератор id, чтобы не вводить зависимость uuid
 const generateId = () =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 
-// demo initial data
 const demoSessions: Session[] = [
   {
     id: 's1',
     teacherId: 't1',
     title: 'Индивидуальный урок — Вокал',
-    start: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-    end: new Date(Date.now() + 1000 * 60 * 60 * 25).toISOString(),
+    start: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+    end: new Date(Date.now() + 25 * 3600 * 1000).toISOString(),
     status: 'free',
     createdAt: new Date().toISOString(),
   },
@@ -20,8 +19,8 @@ const demoSessions: Session[] = [
     id: 's2',
     teacherId: 't1',
     title: 'Групповая репетиция',
-    start: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(),
-    end: new Date(Date.now() + 1000 * 60 * 60 * 50).toISOString(),
+    start: new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+    end: new Date(Date.now() + 50 * 3600 * 1000).toISOString(),
     status: 'booked',
     studentId: 'stu1',
     createdAt: new Date().toISOString(),
@@ -64,4 +63,4 @@ export async function deleteSession(id: string): Promise<boolean> {
   if (idx === -1) return Promise.resolve(false);
   sessionsStore.splice(idx, 1);
   return Promise.resolve(true);
-                                            }
+}

@@ -39,13 +39,10 @@ export const demoUsers: User[] = [
   },
 ];
 
-export function getAllUsers(): Promise<User[]> {
+export async function getAllUsers(): Promise<User[]> {
   return Promise.resolve(demoUsers);
 }
 
-export function getUserById(id: string): Promise<User | undefined> {
+export async function getUserById(id: string): Promise<User | undefined> {
   return Promise.resolve(demoUsers.find((u) => u.id === id));
 }
-
-// реэкспорт типа User — чтобы импорты типа { User } из '@/lib/users' работали
-export type { User };

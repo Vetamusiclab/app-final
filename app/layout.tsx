@@ -1,36 +1,37 @@
 // app/layout.tsx
-import './globals.css';
-import type { Metadata } from 'next';
-import { Roboto, PT_Sans } from 'next/font/google';
+import './globals.css'
+import type { Metadata } from 'next'
+import { Roboto, PT_Sans } from 'next/font/google'
+import { AuthProvider } from '@/components/AuthProvider'
 
 const roboto = Roboto({
   subsets: ['latin', 'cyrillic'],
   weight: ['400', '500', '700'],
   variable: '--font-roboto',
-});
+})
 
 const ptSans = PT_Sans({
   subsets: ['latin', 'cyrillic'],
   weight: ['400', '700'],
   variable: '--font-pt-sans',
-});
+})
 
 export const metadata: Metadata = {
   title: 'Творческая Лаборатория Веты Гулливер — MusicLab',
   description: 'Онлайн-платформа для музыкантов и учеников',
   themeColor: '#ffffff',
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="ru" className={`${roboto.variable} ${ptSans.variable}`}>
-      <body className="font-sans antialiased">
-        {children}
+      <body className="font-sans bg-white text-[#111111] antialiased">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
-  );
+  )
 }

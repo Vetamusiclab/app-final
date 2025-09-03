@@ -4,10 +4,10 @@ export type SessionStatus = 'free' | 'booked' | 'cancelled';
 export type Session = {
   id: string;
   teacherId: string;
-  studentId?: string | null;
   title: string;
-  start: string; // ISO datetime
-  end: string;   // ISO datetime
+  start: string; // ISO string
+  end: string;   // ISO string
   status: SessionStatus;
+  studentId?: string;
   createdAt?: string;
 };

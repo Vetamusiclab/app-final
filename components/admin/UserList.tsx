@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { User } from '@/lib/users'; // теперь lib/users реэкспортирует тип
+import type { User } from '@/types/user';
 import UserAvatar from '@/components/shared/UserAvatar';
 
 type Props = {
@@ -42,16 +42,12 @@ export default function UserList({ users }: Props) {
               <UserAvatar src={u.avatar} name={u.name} />
               <div>
                 <div className="font-medium">{u.name}</div>
-                <div className="text-xs text-gray-500">
-                  {u.role} {u.directions && `• ${u.directions.join(', ')}`}
-                </div>
+                <div className="text-xs text-gray-500">{u.role} • {u.directions?.join(', ')}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button className="px-3 py-1 text-sm border rounded">Ред.</button>
-              <button onClick={() => onDelete(u.id)} className="px-3 py-1 text-sm text-red-600 border rounded">
-                Удалить
-              </button>
+              <button onClick={() => onDelete(u.id)} className="px-3 py-1 text-sm text-red-600 border rounded">Удалить</button>
             </div>
           </div>
         ))}

@@ -1,5 +1,8 @@
 // lib/users.ts
+// Серверный модуль с demo-данными пользователей + реэкспорт типа User
+
 import type { User } from '@/types/user';
+export type { User }; // <-- реэкспортируем тип, чтобы другие места могли импортировать из '@/lib/users'
 
 export const demoUsers: User[] = [
   {

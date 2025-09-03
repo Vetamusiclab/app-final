@@ -1,56 +1,61 @@
-"use client";
+// app/login/page.tsx
+'use client';
 
-import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import { useRouter } from 'next/navigation';
 
-export default function RoleSelectPage() {
+export default function LoginPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [selected, setSelected] = useState('');
+  const { user, login } = useAuth();
   const router = useRouter();
 
-  const roles = [
-    { label: "Ученик", icon: "🎓", value: "student" },
-    { label: "Преподаватель", icon: "🎵", value: "teacher" },
-    { label: "Админ", icon: "🛠️", value: "admin" },
-  ];
+  useEffect(() => {
+    fetch('/api/users').then((r) => r.json()).then((data) => setUsers(data || []));
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') router.push('/admin');
+      else if (user.role === 'teacher') router.push('/teacher');
+      else router.push('/student');
+    }
+  }, [user, router]);
+
+  async function onLogin() {
+    if (!selected) {
+      alert('Выберите пользователя');
+      return;
+    }
+    const u = await login(selected);
+    if (!u) alert('Не удалось войти');
+  }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
-      <motion.h1
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-2xl font-bold text-[#FF6F00]"
-      >
-        Выберите роль
-      </motion.h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white p-6 rounded shadow">
+        <h1 className="text-xl font-semibold mb-4">Войти</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {roles.map((role, i) => (
-          <motion.div
-            key={role.value}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.2 }}
-          >
-            <Card
-              className="cursor-pointer rounded-2xl border border-[#FFE0B2] p-6 text-center shadow-md hover:scale-105 transition"
-              onClick={() => router.push(`/login/${role.value}`)}
-            >
-              <CardContent>
-                <div className="text-5xl mb-2">{role.icon}</div>
-                <div className="text-lg font-semibold">{role.label}</div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+        <label className="block text-sm mb-2">Выберите пользователя</label>
+        <select value={selected} onChange={(e) => setSelected(e.target.value)} className="w-full px-3 py-2 border rounded mb-4">
+          <option value="">— выбрать —</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name} — {u.role}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex gap-2">
+          <button onClick={onLogin} className="px-4 py-2 bg-primary text-white rounded">
+            Войти
+          </button>
+          <a href="/" className="px-4 py-2 border rounded">
+            Назад
+          </a>
+        </div>
       </div>
-
-      <button
-        onClick={() => router.push("/")}
-        className="mt-6 text-[#6BCB77] hover:underline"
-      >
-        Назад на главную
-      </button>
-    </main>
+    </div>
   );
 }

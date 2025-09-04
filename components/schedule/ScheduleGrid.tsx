@@ -1,194 +1,115 @@
+// components/schedule/ScheduleGrid.tsx
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import BookingModal from './BookingModal';
+import React, { useMemo, useState } from 'react';
+import type { Lesson } from '@/types/lesson';
 import type { User } from '@/types/user';
-
-type Lesson = {
-  id: string;
-  teacherId: string;
-  studentName?: string;
-  auditorium: string;
-  startHour: number; // e.g. 9, 14
-  durationHours: number; // integer >=1
-  status?: 'ok' | 'cancelled' | 'transfer';
-};
+import BookingModal, { LessonPayload } from './BookingModal';
 
 type Props = {
-  initialLessons?: Lesson[];
-  teachers?: User[]; // для выбора преподавателя
-  auditoriums?: string[]; // список аудиторий (колонки)
-  currentUser?: User | null; // для прав доступа
-  teacherColors?: Record<string, string>; // mapping teacherId -> color
+  initialLessons: Lesson[];
+  teachers: User[];
+  audiences: string[]; // ['216','222',...]
+  currentUser: User;
 };
 
-const ROW_HEIGHT = 72; // px per hour (you can tweak)
-const START_HOUR = 9;
-const END_HOUR = 22; // inclusive
-
-export default function ScheduleGrid({
-  initialLessons = [],
-  teachers = [],
-  auditoriums = ['216', '222', '223', '244', '260', '11A'],
-  currentUser = null,
-  teacherColors = {},
-}: Props) {
-  const [lessons, setLessons] = useState<Lesson[]>(initialLessons);
-  const [colWidths, setColWidths] = useState<number[]>(
-    () => auditoriums.map(() => 260)
-  );
-  const resizingRef = useRef<{ idx: number; startX: number; startW: number } | null>(null);
-
-  // modal state
+export default function ScheduleGrid({ initialLessons, teachers, audiences, currentUser }: Props) {
+  const [lessons, setLessons] = useState<Lesson[]>(initialLessons ?? []);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalInit, setModalInit] = useState<{ auditorium?: string; hour?: number } | null>(null);
+  const [modalDefaults, setModalDefaults] = useState<{aud?:string; hour?:number}>({});
 
-  // times array (hours from START_HOUR to END_HOUR)
   const hours = useMemo(() => {
     const arr: number[] = [];
-    for (let h = START_HOUR; h <= END_HOUR; h++) arr.push(h);
+    for (let h = 9; h <= 22; h++) arr.push(h);
     return arr;
   }, []);
 
-  useEffect(() => {
-    function onMouseMove(e: MouseEvent) {
-      if (!resizingRef.current) return;
-      const { idx, startX, startW } = resizingRef.current;
-      const dx = e.clientX - startX;
-      setColWidths((prev) => {
-        const next = [...prev];
-        const newW = Math.max(140, Math.round(startW + dx));
-        next[idx] = newW;
-        return next;
-      });
-    }
-    function onUp() {
-      resizingRef.current = null;
-      document.body.style.userSelect = '';
-    }
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, []);
-
-  function startResize(idx: number, e: React.MouseEvent) {
-    resizingRef.current = { idx, startX: e.clientX, startW: colWidths[idx] };
-    document.body.style.userSelect = 'none';
-  }
-
-  function openCreateModal(auditorium: string, hour: number) {
-    setModalInit({ auditorium, hour });
+  function openAdd(aud: string, hour: number) {
+    setModalDefaults({ aud, hour });
     setModalOpen(true);
   }
 
-  function createLesson(data: Omit<Lesson, 'id'>) {
-    const newLesson: Lesson = { ...data, id: String(Date.now() + Math.random()) };
+  function handleCreate(payload: LessonPayload) {
+    const newLesson: Lesson = {
+      id: `lesson-${Date.now()}`,
+      teacherId: payload.teacherId,
+      studentName: payload.studentName,
+      auditorium: payload.auditorium,
+      startHour: payload.startHour,
+      durationHours: payload.durationHours,
+      status: payload.status ?? 'ok',
+      createdBy: currentUser?.id,
+    };
     setLessons((s) => [...s, newLesson]);
     setModalOpen(false);
   }
 
+  // helper to find lesson that starts at hour in auditorium (simple)
+  function findLessonAt(aud: string, hour: number) {
+    return lessons.find((l) => l.auditorium === aud && l.startHour === hour);
+  }
+
+  function teacherNameById(id?: string) {
+    return teachers.find((t) => t.id === id)?.name ?? id ?? '—';
+  }
+
   return (
     <div>
-      <div className="overflow-x-auto">
-        <div className="inline-flex items-start gap-4">
-          {/* Time column (left) */}
-          <div style={{ minWidth: 100 }} className="flex-shrink-0">
-            <div className="sticky top-0 bg-white z-10 p-2 border rounded-t-md">Время</div>
-            <div>
-              {hours.map((h) => (
-                <div
-                  key={h}
-                  style={{ height: ROW_HEIGHT }}
-                  className="border-b flex items-center justify-center text-sm text-gray-600"
-                >
-                  {String(h).padStart(2, '0')}:00
-                </div>
+      <div className="overflow-auto border rounded">
+        <table className="w-full table-fixed">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="w-32 p-2 border-r">Время</th>
+              {audiences.map((a) => (
+                <th key={a} className="p-2 text-left">{a}</th>
               ))}
-            </div>
-          </div>
+            </tr>
+          </thead>
 
-          {/* Auditorium columns */}
-          {auditoriums.map((aud, idx) => (
-            <div
-              key={aud}
-              className="relative flex-shrink-0 bg-white border rounded"
-              style={{ minWidth: colWidths[idx] }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-2 border-b sticky top-0 bg-white z-10">
-                <div className="font-medium">{aud}</div>
-                <div
-                  onMouseDown={(e) => startResize(idx, e)}
-                  className="w-2 h-6 cursor-col-resize"
-                  title="Изменить ширину"
-                />
-              </div>
+          <tbody>
+            {hours.map((h) => (
+              <tr key={h} className="odd:bg-white even:bg-gray-50">
+                <td className="p-2 text-sm font-medium border-r">{String(h).padStart(2, '0')}:00</td>
 
-              {/* Column body */}
-              <div style={{ position: 'relative' }}>
-                {/* Empty hourly rows */}
-                <div>
-                  {hours.map((h) => (
-                    <div
-                      key={h}
-                      onDoubleClick={() => {
-                        // double click to create at this hour (if allowed)
-                        if (currentUser && (currentUser.role === 'teacher' || currentUser.role === 'admin')) {
-                          openCreateModal(aud, h);
-                        }
-                      }}
-                      style={{ height: ROW_HEIGHT }}
-                      className="border-b hover:bg-gray-50 cursor-default"
-                      title={currentUser && (currentUser.role === 'teacher' || currentUser.role === 'admin') ? 'Двойной клик — добавить урок' : ''}
-                    />
-                  ))}
-                </div>
-
-                {/* Render lessons for this auditorium */}
-                {lessons
-                  .filter((L) => L.auditorium === aud)
-                  .map((L) => {
-                    const top = (L.startHour - START_HOUR) * ROW_HEIGHT;
-                    const height = L.durationHours * ROW_HEIGHT - 6;
-                    const color = teacherColors[L.teacherId] ?? '#60A5FA';
-                    const isCancelled = L.status === 'cancelled';
-                    return (
-                      <div
-                        key={L.id}
-                        className="absolute left-2 right-2 rounded-md p-2 shadow-md text-sm text-white overflow-hidden"
-                        style={{
-                          top,
-                          height,
-                          background: isCancelled ? '#ef4444' : color,
-                        }}
-                        title={`${L.studentName ?? '—'} — ${L.durationHours} ч`}
-                      >
-                        <div className="font-medium truncate">{L.studentName ?? '(Занятие)'}</div>
-                        <div className="text-xs opacity-90">
-                          {teachers.find((t) => t.id === L.teacherId)?.name ?? 'Преподаватель'} • {L.startHour}:00
-                          {L.status === 'transfer' ? ' ⏱' : ''}
+                {audiences.map((a) => {
+                  const l = findLessonAt(a, h);
+                  return (
+                    <td key={a} className="p-2 align-top border">
+                      {l ? (
+                        <div className={`p-2 rounded`} title={`${l.studentName} — ${teacherNameById(l.teacherId)}`}>
+                          <div className="font-semibold">{l.studentName}</div>
+                          <div className="text-xs text-gray-600">{teacherNameById(l.teacherId)}</div>
+                          <div className="text-xs mt-1">
+                            {l.durationHours} ч. {l.status === 'cancelled' ? ' (Отмена)' : l.status === 'transfer' ? ' (Перенос)' : ''}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          ))}
-        </div>
+                      ) : (
+                        <div className="text-xs text-gray-400">
+                          <button
+                            onClick={() => openAdd(a, h)}
+                            className="text-sm px-2 py-1 rounded border hover:bg-gray-100"
+                          >
+                            Добавить
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Modal */}
       <BookingModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreate={(payload) => createLesson(payload)}
-        defaultAuditorium={modalInit?.auditorium}
-        defaultHour={modalInit?.hour}
+        onCreate={handleCreate}
+        defaultAuditorium={modalDefaults.aud}
+        defaultHour={modalDefaults.hour}
         teachers={teachers}
-        auditoriums={auditoriums}
+        auditoriums={audiences}
       />
     </div>
   );

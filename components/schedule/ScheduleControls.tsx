@@ -5,7 +5,7 @@ import React from 'react';
 
 type Props = {
   scale: number;
-  setScale: (n: number) => void;
+  setScale: (n: number) => void; // принимает число
   fitToScreen: () => void;
 };
 
@@ -14,15 +14,17 @@ export default function ScheduleControls({ scale, setScale, fitToScreen }: Props
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-2">
         <button
-          onClick={() => setScale((s) => Math.max(0.4, +(s - 0.1).toFixed(2)))}
+          onClick={() => setScale(Math.max(0.4, Number((scale - 0.1).toFixed(2))))}
           className="px-3 py-1 border rounded"
           aria-label="Уменьшить масштаб"
         >
           −
         </button>
+
         <div className="text-sm px-2">Масштаб: {(scale * 100).toFixed(0)}%</div>
+
         <button
-          onClick={() => setScale((s) => Math.min(2, +(s + 0.1).toFixed(2)))}
+          onClick={() => setScale(Math.min(2, Number((scale + 0.1).toFixed(2))))}
           className="px-3 py-1 border rounded"
           aria-label="Увеличить масштаб"
         >

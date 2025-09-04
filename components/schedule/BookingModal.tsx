@@ -2,191 +2,113 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import type { Lesson, LessonStatus } from '@/types/lesson';
+import type { Lesson } from '@/types/lesson';
 import type { User } from '@/types/user';
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
-  onSave: (lesson: Lesson) => void;
-  onDelete?: (id: string) => void;
-  initial?: Lesson | null;
+  initialSlot?: { audience: string; hour: number } | null;
+  lesson?: Lesson | null;
   teachers: User[];
   audiences: string[];
-  defaultAuditorium?: string;
-  defaultStartHour?: number;
-  currentUser?: User | null;
+  startHour: number;
+  endHour: number;
+  onClose: () => void;
+  onSave: (payload: Partial<Lesson> | Lesson) => void;
+  onDelete: (id: string) => void;
 };
 
 export default function BookingModal({
-  open,
+  initialSlot,
+  lesson,
+  teachers,
+  audiences,
+  startHour,
+  endHour,
   onClose,
   onSave,
   onDelete,
-  initial = null,
-  teachers,
-  audiences,
-  defaultAuditorium,
-  defaultStartHour,
-  currentUser,
 }: Props) {
-  const [studentName, setStudentName] = useState(initial?.studentName ?? '');
-  const [teacherId, setTeacherId] = useState(initial?.teacherId ?? teachers?.[0]?.id ?? '');
-  const [auditorium, setAuditorium] = useState(initial?.auditorium ?? defaultAuditorium ?? audiences?.[0]);
-  const [startHour, setStartHour] = useState<number>(initial?.startHour ?? defaultStartHour ?? 9);
-  const [durationHours, setDurationHours] = useState<number>(initial?.durationHours ?? 1);
-  const [status, setStatus] = useState<LessonStatus>(initial?.status ?? 'scheduled');
+  const [auditorium, setAuditorium] = useState<string>(initialSlot?.audience ?? lesson?.auditorium ?? audiences[0]);
+  const [startHourState, setStartHourState] = useState<number>(initialSlot?.hour ?? lesson?.startHour ?? startHour);
+  const [durationHours, setDurationHours] = useState<number>(lesson?.durationHours ?? 1);
+  const [teacherId, setTeacherId] = useState<string>(lesson?.teacherId ?? teachers[0]?.id ?? '');
+  const [studentName, setStudentName] = useState<string>(lesson?.studentName ?? '');
 
   useEffect(() => {
-    if (open) {
-      setStudentName(initial?.studentName ?? '');
-      setTeacherId(initial?.teacherId ?? teachers?.[0]?.id ?? '');
-      setAuditorium(initial?.auditorium ?? defaultAuditorium ?? audiences?.[0]);
-      setStartHour(initial?.startHour ?? defaultStartHour ?? 9);
-      setDurationHours(initial?.durationHours ?? 1);
-      setStatus(initial?.status ?? 'scheduled');
+    if (lesson) {
+      setAuditorium(lesson.auditorium);
+      setStartHourState(lesson.startHour ?? startHour);
+      setDurationHours(lesson.durationHours ?? 1);
+      setTeacherId(lesson.teacherId);
+      setStudentName(lesson.studentName ?? '');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initial]);
+  }, [lesson]);
 
-  if (!open) return null;
+  const hoursOptions = [];
+  for (let h = startHour; h < endHour; h++) hoursOptions.push(h);
 
   function handleSave() {
-    // validation minimal
-    if (!teacherId) {
-      alert('Выберите преподавателя');
-      return;
-    }
-    const lesson: Lesson = {
-      id: initial?.id ?? `l_${Date.now().toString(36)}`,
-      auditorium: auditorium ?? audiences[0],
-      startHour,
-      durationHours: Math.max(1, Math.round(durationHours)),
-      teacherId,
-      studentName: studentName || '—',
-      status,
-      createdBy: initial?.createdBy ?? currentUser?.id ?? 'system',
-      createdAt: initial?.createdAt ?? new Date().toISOString(),
-    };
-    onSave(lesson);
-    onClose();
+    const payload: Partial<Lesson> | Lesson = lesson
+      ? { ...lesson, auditorium, startHour: Number(startHourState), durationHours: Number(durationHours), teacherId, studentName }
+      : { auditorium, startHour: Number(startHourState), durationHours: Number(durationHours), teacherId, studentName, status: 'scheduled' };
+    onSave(payload);
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-[min(720px,95%)] p-6 z-60">
-        <h3 className="text-lg font-semibold mb-4">{initial ? 'Редактировать урок' : 'Новый урок'}</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+      <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">{lesson ? 'Редактировать занятие' : 'Создать занятие'}</h3>
 
         <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col text-sm">
-            Преподаватель
-            <select
-              value={teacherId}
-              onChange={(e) => setTeacherId(e.target.value)}
-              className="mt-1 p-2 border rounded"
-            >
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
+          <label className="block">
+            <div className="text-xs text-gray-600">Аудитория</div>
+            <select value={auditorium} onChange={(e) => setAuditorium(e.target.value)} className="mt-1 w-full border px-2 py-2 rounded">
+              {audiences.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </label>
 
-          <label className="flex flex-col text-sm">
-            Аудитория
-            <select
-              value={auditorium}
-              onChange={(e) => setAuditorium(e.target.value)}
-              className="mt-1 p-2 border rounded"
-            >
-              {audiences.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
+          <label className="block">
+            <div className="text-xs text-gray-600">Преподаватель</div>
+            <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className="mt-1 w-full border px-2 py-2 rounded">
+              {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </label>
 
-          <label className="flex flex-col text-sm">
-            Начало (час)
-            <input
-              type="number"
-              min={0}
-              max={23}
-              value={startHour}
-              onChange={(e) => setStartHour(Number(e.target.value))}
-              className="mt-1 p-2 border rounded"
-            />
-          </label>
-
-          <label className="flex flex-col text-sm">
-            Длительность (часы)
-            <input
-              type="number"
-              min={1}
-              max={8}
-              value={durationHours}
-              onChange={(e) => setDurationHours(Number(e.target.value))}
-              className="mt-1 p-2 border rounded"
-            />
-          </label>
-
-          <label className="flex flex-col text-sm col-span-2">
-            Ученик / описание
-            <input
-              type="text"
-              value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
-              className="mt-1 p-2 border rounded"
-              placeholder="Имя ученика"
-            />
-          </label>
-
-          <label className="flex flex-col text-sm">
-            Статус
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as LessonStatus)}
-              className="mt-1 p-2 border rounded"
-            >
-              <option value="scheduled">Запланирован</option>
-              <option value="ok">Проведен</option>
-              <option value="transfer">Перенос</option>
-              <option value="canceled">Отменен</option>
+          <label className="block">
+            <div className="text-xs text-gray-600">Время (час)</div>
+            <select value={startHourState} onChange={(e) => setStartHourState(Number(e.target.value))} className="mt-1 w-full border px-2 py-2 rounded">
+              {hoursOptions.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>)}
             </select>
           </label>
 
-          <div className="col-span-2 flex justify-between items-center mt-3">
-            <div className="text-xs text-gray-500">
-              Создан: {initial?.createdAt ? new Date(initial.createdAt).toLocaleString() : '—'} by{' '}
-              {initial?.createdBy ?? currentUser?.id ?? '—'}
-            </div>
+          <label className="block">
+            <div className="text-xs text-gray-600">Длительность (часов)</div>
+            <select value={durationHours} onChange={(e) => setDurationHours(Number(e.target.value))} className="mt-1 w-full border px-2 py-2 rounded">
+              {[1,2,3,4].map((d) => <option key={d} value={d}>{d} ч</option>)}
+            </select>
+          </label>
 
-            <div className="flex gap-2">
-              {initial && onDelete && (
-                <button
-                  onClick={() => {
-                    if (confirm('Удалить урок?')) {
-                      onDelete(initial.id);
-                      onClose();
-                    }
-                  }}
-                  className="px-3 py-2 bg-red-50 text-red-700 border border-red-100 rounded"
-                >
-                  Удалить
-                </button>
-              )}
+          <label className="col-span-2 block">
+            <div className="text-xs text-gray-600">Ученик / Комментарий</div>
+            <input value={studentName} onChange={(e) => setStudentName(e.target.value)} className="mt-1 w-full border px-2 py-2 rounded" />
+          </label>
+        </div>
 
-              <button onClick={onClose} className="px-3 py-2 border rounded">
-                Отмена
-              </button>
-              <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded">
-                Сохранить
-              </button>
-            </div>
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex gap-2">
+            <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded">Сохранить</button>
+            <button onClick={onClose} className="px-4 py-2 border rounded">Отмена</button>
           </div>
+
+          {lesson && (
+            <button
+              onClick={() => lesson && onDelete(lesson.id)}
+              className="px-3 py-2 bg-red-100 text-red-700 rounded"
+            >
+              Удалить
+            </button>
+          )}
         </div>
       </div>
     </div>

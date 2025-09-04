@@ -1,128 +1,118 @@
 // components/schedule/ScheduleGrid.tsx
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import type { Lesson } from '@/types/lesson';
 import type { User } from '@/types/user';
 
 type Props = {
   initialLessons: Lesson[];
-  teachers: User[];
-  // допускаем и readonly и обычный массив
-  audiences: ReadonlyArray<string> | string[];
-  currentUser: User;
-  startHour?: number; // default 9
-  endHour?: number;   // default 22
+  teachers: User[]; // список преподавателей (для цвета/имени)
+  audiences: string[]; // список аудиторий, например ['216','222',...]
+  startHour?: number; // например 9
+  endHour?: number; // например 22
+  onLessonClick?: (lesson: Lesson) => void;
 };
+
+function hourLabel(h: number) {
+  return `${String(h).padStart(2, '0')}:00`;
+}
+
+// Простейшая детерминированная функция цвета по id преподавателя
+function teacherColor(id?: string) {
+  if (!id) return 'hsl(0 0% 90%)';
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash << 5) - hash + id.charCodeAt(i);
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue} 70% 45%)`;
+}
 
 export default function ScheduleGrid({
   initialLessons,
   teachers,
   audiences,
-  currentUser,
   startHour = 9,
   endHour = 22,
+  onLessonClick,
 }: Props) {
-  // приводим audiences к обычному массиву для внутреннего использования
-  const audienceList = Array.from(audiences);
-
-  // ширина колонок: по умолчанию 260px, можно регулировать
-  const [colWidths, setColWidths] = useState(() =>
-    audienceList.map(() => 260)
-  );
-
   const hours = useMemo(() => {
     const arr: number[] = [];
-    for (let h = startHour; h <= endHour - 1; h++) arr.push(h);
+    for (let h = startHour; h < endHour; h++) arr.push(h);
     return arr;
   }, [startHour, endHour]);
 
-  function incWidth(i: number, delta = 20) {
-    setColWidths((w) => w.map((v, idx) => (idx === i ? Math.max(120, v + delta) : v)));
-  }
-
-  // helper: find lesson that starts at hour & audience
-  function lessonAt(audience: string, hour: number) {
-    return initialLessons.find((l) => l.audience === audience && l.startHour === hour);
-  }
+  // covered set to skip cells that are part of a rowspan from earlier hours
+  const covered = new Set<string>(); // key: `${aud}_${hour}`
 
   return (
-    <div className="overflow-x-auto border rounded bg-white p-2">
-      <div style={{ minWidth: Math.max(700, audienceList.length * 240) }}>
-        {/* Header (audiences) */}
-        <div className="flex items-stretch">
-          <div style={{ width: 120 }} className="flex items-center justify-center border-r">
-            <div className="text-sm text-muted">Время</div>
-          </div>
+    <div className="w-full overflow-auto">
+      <table className="table-auto border-collapse w-full">
+        <thead>
+          <tr>
+            <th className="sticky left-0 z-10 bg-white border px-3 py-2 w-24">Время</th>
+            {audiences.map((a) => (
+              <th key={a} className="border px-4 py-2 min-w-[220px] text-left bg-gray-50">
+                {a}
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-          {audienceList.map((aud, i) => (
-            <div
-              key={aud}
-              className="border-r flex flex-col"
-              style={{ width: colWidths[i], minWidth: 120 }}
-            >
-              <div className="flex items-center justify-between px-3 py-2 bg-gray-50">
-                <div className="font-semibold">{aud}</div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => incWidth(i, -20)}
-                    className="px-2 py-1 text-xs border rounded"
-                    aria-label="Уменьшить колонку"
-                  >
-                    −
-                  </button>
-                  <button
-                    onClick={() => incWidth(i, +20)}
-                    className="px-2 py-1 text-xs border rounded"
-                    aria-label="Увеличить колонку"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
+        <tbody>
+          {hours.map((hour) => (
+            <tr key={hour}>
+              <td className="border px-2 py-3 text-sm text-gray-700">{hourLabel(hour)}</td>
 
-              {/* column body: rows per hour */}
-              <div>
-                {hours.map((hour) => {
-                  const lesson = lessonAt(aud, hour);
-                  if (!lesson) {
-                    return (
-                      <div
-                        key={aud + hour}
-                        className="h-16 border-b px-3 text-sm text-gray-600 flex items-center"
-                      >
-                        {`${hour}:00`}
-                      </div>
-                    );
+              {audiences.map((aud) => {
+                // если этот слот покрыт предыдущим rowspan — пропускаем (null в react table)
+                if (covered.has(`${aud}_${hour}`)) return null;
+
+                // ищем урок, который начинается именно в этом часу и в этой аудитории
+                const lesson = initialLessons.find(
+                  (l) => l.auditorium === aud && l.startHour === hour
+                );
+
+                if (lesson) {
+                  // помечаем покрытые часы (следующие) для этой аудитории
+                  for (let k = 1; k < lesson.durationHours; k++) {
+                    covered.add(`${aud}_${hour + k}`);
                   }
 
-                  // render lesson block spanning duration (visual only)
-                  const duration = Math.max(1, Math.round(lesson.durationHours));
-                  const height = 64 * duration; // 64px per hour row
-                  const teacher = teachers.find((t) => t.id === lesson.teacherId);
-                  const isCancelled = lesson.status === 'cancelled';
+                  // найдём преподавателя для отображения имени (если есть)
+                  const teacher = teachers?.find((t) => t.id === lesson.teacherId);
 
                   return (
-                    <div
-                      key={lesson.id}
-                      className={`m-2 rounded px-3 py-2 shadow-sm text-sm ${
-                        isCancelled ? 'bg-red-100 text-red-800' : 'bg-[#fff7ed] text-[#7a2e00]'
-                      }`}
-                      style={{ height }}
+                    <td
+                      key={aud}
+                      rowSpan={Math.max(1, lesson.durationHours)}
+                      className="border px-3 py-2 align-top"
                     >
-                      <div className="font-medium">{lesson.studentName}</div>
-                      <div className="text-xs text-gray-500">
-                        {teacher ? teacher.name : lesson.teacherId} • {lesson.startHour}:00 — {lesson.startHour + duration}:00
-                        {lesson.status === 'transfer' && <span className="ml-2">⏱</span>}
+                      <div
+                        role="button"
+                        onClick={() => onLessonClick?.(lesson)}
+                        className="rounded p-3 cursor-pointer select-none"
+                        style={{
+                          background: teacherColor(lesson.teacherId),
+                          color: '#fff',
+                        }}
+                      >
+                        <div className="font-semibold text-sm">{lesson.studentName ?? '—'}</div>
+                        <div className="text-xs opacity-90">
+                          {teacher?.name ?? lesson.teacherId} • {lesson.durationHours}ч
+                        </div>
+                        <div className="text-xs opacity-80 mt-1">Ауд.: {lesson.auditorium}</div>
                       </div>
-                    </div>
+                    </td>
                   );
-                })}
-              </div>
-            </div>
+                }
+
+                // пустая ячейка (с возможностью кликнуть чтобы создать)
+                return <td key={aud} className="border px-3 py-2" />;
+              })}
+            </tr>
           ))}
-        </div>
-      </div>
+        </tbody>
+      </table>
     </div>
   );
 }

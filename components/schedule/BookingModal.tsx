@@ -4,16 +4,16 @@
 import React, { useEffect, useState } from 'react';
 import type { Lesson } from '@/types/lesson';
 
+type TeacherOption = { id: string; name: string };
+
 type Props = {
   open: boolean;
   onClose: () => void;
-  // если редактируем существующий урок — передаем initialLesson
   initialLesson?: Lesson | null;
-  // callback при сохранении — можно сохранять на сервер позже
   onSave?: (lesson: Lesson) => void;
   defaultHour?: number;
   defaultAuditorium?: string;
-  teachers?: { id: string; name: string }[]; // для селектора (опционально)
+  teachers?: TeacherOption[];
 };
 
 export default function BookingModal({
@@ -25,18 +25,15 @@ export default function BookingModal({
   defaultAuditorium = '216',
   teachers = [],
 }: Props) {
-  // локальное состояние формы
   const [studentName, setStudentName] = useState<string>(initialLesson?.studentName ?? '');
   const [startHour, setStartHour] = useState<number>(initialLesson?.startHour ?? defaultHour);
   const [durationHours, setDurationHours] = useState<number>(initialLesson?.durationHours ?? 1);
   const [auditorium, setAuditorium] = useState<string>(initialLesson?.auditorium ?? defaultAuditorium);
   const [teacherId, setTeacherId] = useState<string>(initialLesson?.teacherId ?? (teachers[0]?.id ?? ''));
-  // status может быть undefined — безопаснее, чем ставить значение, не входящее в тип
   const [status, setStatus] = useState<Lesson['status'] | undefined>(initialLesson?.status);
 
   useEffect(() => {
     if (open) {
-      // при открытии модального окна инициализируем поля (если пришел initial)
       setStudentName(initialLesson?.studentName ?? '');
       setStartHour(initialLesson?.startHour ?? defaultHour);
       setDurationHours(initialLesson?.durationHours ?? 1);
@@ -56,7 +53,8 @@ export default function BookingModal({
       teacherId: teacherId || 'unknown',
       studentName: studentName || '—',
       status: status ?? 'scheduled',
-      createdBy: initialLesson?.createdBy ?? teacherId || 'system',
+      // исправлено: используем цепочку nullish coalescing (не смешиваем ?? и ||)
+      createdBy: initialLesson?.createdBy ?? teacherId ?? 'system',
       createdAt: initialLesson?.createdAt ?? new Date().toISOString(),
     };
 
@@ -68,7 +66,6 @@ export default function BookingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* overlay */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}

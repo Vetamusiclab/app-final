@@ -1,40 +1,24 @@
 // types/lesson.ts
-// Общие типы для расписания / урока
-
 export type LessonStatus =
-  | 'scheduled'   // запланировано
-  | 'confirmed'   // подтверждено
-  | 'cancelled'   // отменено
-  | 'transfer'    // перенос
-  | 'makeup'      // отработка / разовое занятие
-  | 'draft'       // черновик / предварительно
-  | 'ok';         // совместимость с прежними значениями
+  | 'scheduled'
+  | 'confirmed'
+  | 'ok'
+  | 'makeup'
+  | 'transfer'
+  | 'cancelled'
+  | 'draft';
 
 export type Lesson = {
   id: string;
-  // аудитория/класс/комната — строка ('216', '222' и т.д.)
+  // Название поля для аудитории — единообразно используем "auditorium"
   auditorium: string;
-
-  // Час начала (целое), например 9, 10, ... (мы используем часовой шаг)
+  // Час (целое) начала занятия, например 9, 10, ... 21
   startHour: number;
-
-  // Длительность в целых часах (можно расширить)
+  // Длительность в часах (целое)
   durationHours: number;
-
-  // id преподавателя (teacher)
   teacherId: string;
-
-  // имя ученика (показательное поле)
-  studentName: string;
-
-  // статус урока (опционален)
+  studentName?: string;
   status?: LessonStatus;
-
-  // кто создал запись (id пользователя)
   createdBy?: string;
-
-  // дополнительные метки (эмодзи и т. п.)
-  noteEmoji?: string;
-  // дата создания/и т.д.
   createdAt?: string;
 };

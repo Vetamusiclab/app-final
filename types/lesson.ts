@@ -4,11 +4,11 @@ export type LessonStatus = 'scheduled' | 'ok' | 'canceled' | 'transfer' | 'confi
 export type Lesson = {
   id: string;
   auditorium: string;       // '216', '222', '11A' и т.д.
-  startHour: number;        // целое число, час начала (9,10,...)
+  startHour: number;        // час начала (9, 10, ...)
   durationHours: number;    // длительность в часах (целое >= 1)
-  teacherId: string;        // id преподавателя (из users)
+  teacherId: string;        // id преподавателя
   studentName?: string;
   status?: LessonStatus;
-  createdBy?: string;       // id того, кто создал урок
+  createdBy?: string;       // id того, кто создал запись
   createdAt?: string;       // ISO дата
 };

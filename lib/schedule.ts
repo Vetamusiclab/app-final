@@ -1,15 +1,20 @@
 // lib/schedule.ts
 import type { Lesson } from '@/types/lesson';
 
-/** Простая функция для генерации id в демо */
+/** Генератор простых id для демо */
 function makeId(prefix = 'l') {
   return `${prefix}${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/** Список аудиторий (используется как строки в компонентах) */
-export const AUDIENCES = ['216', '222', '223', '244', '260', '11A'] as const;
+/**
+ * Список аудиторий.
+ * Важно: экспортируем как mutable string[] чтобы нигде не возникали ошибки с readonly tuple.
+ */
+export const AUDIENCES: string[] = ['216', '222', '223', '244', '260', '11A'];
 
-/** Демо-список уроков — убедитесь, что статусы совпадают с LessonStatus */
+/**
+ * Демо-данные уроков. Поля и статусы соответствуют types/lesson.ts
+ */
 export const demoLessons: Lesson[] = [
   {
     id: makeId(),
@@ -29,7 +34,7 @@ export const demoLessons: Lesson[] = [
     durationHours: 2,
     teacherId: 't2',
     studentName: 'Анна Смирнова',
-    status: 'confirmed', // теперь валидно (в LessonStatus)
+    status: 'confirmed',
     createdBy: 'a1',
     createdAt: new Date().toISOString(),
   },
@@ -68,7 +73,43 @@ export const demoLessons: Lesson[] = [
   },
 ];
 
-/** Хелпер для получения (демо) */
-export function getInitialLessons(): Promise<Lesson[]> {
+/**
+ * Экспортированные хелперы — называются так, как их ждут страницы:
+ * - getAllLessons() — для server components, возвращает Promise<Lesson[]>
+ * - getLessonById(id)
+ * - createLesson / updateLesson / deleteLesson — простая локальная логика для демо
+ *
+ * (Позже легко заменить на реальные API-запросы)
+ */
+
+export function getAllLessons(): Promise<Lesson[]> {
   return Promise.resolve(demoLessons);
+}
+
+export function getLessonById(id: string): Promise<Lesson | undefined> {
+  return Promise.resolve(demoLessons.find((l) => l.id === id));
+}
+
+export function createLesson(newLesson: Omit<Lesson, 'id' | 'createdAt'>): Promise<Lesson> {
+  const lesson: Lesson = {
+    ...newLesson,
+    id: makeId(),
+    createdAt: new Date().toISOString(),
+  };
+  demoLessons.push(lesson);
+  return Promise.resolve(lesson);
+}
+
+export function updateLesson(id: string, patch: Partial<Lesson>): Promise<Lesson | undefined> {
+  const idx = demoLessons.findIndex((l) => l.id === id);
+  if (idx === -1) return Promise.resolve(undefined);
+  demoLessons[idx] = { ...demoLessons[idx], ...patch };
+  return Promise.resolve(demoLessons[idx]);
+}
+
+export function deleteLesson(id: string): Promise<boolean> {
+  const idx = demoLessons.findIndex((l) => l.id === id);
+  if (idx === -1) return Promise.resolve(false);
+  demoLessons.splice(idx, 1);
+  return Promise.resolve(true);
 }

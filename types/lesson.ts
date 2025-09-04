@@ -1,13 +1,13 @@
 // types/lesson.ts
-export type LessonStatus = 'scheduled' | 'cancelled' | 'one-off';
+export type LessonStatus = 'ok' | 'cancelled' | 'transfer';
 
 export type Lesson = {
   id: string;
-  audience: string;      // e.g. '216'
-  time: string;          // '09:00' (slot)
   teacherId: string;
-  studentName: string;
-  status: LessonStatus;
-  note?: string;
-  createdBy?: string;    // user id who created the lesson (admin/teacher)
+  studentName?: string;
+  auditorium: string;      // например "216"
+  startHour: number;       // целое: 9..22 (часы начала)
+  durationHours: number;   // длительность в часах (1,2,...)
+  status?: LessonStatus;
+  createdBy?: string;      // id пользователя, который создал запись
 };

@@ -1,20 +1,23 @@
 // app/teacher/schedule/page.tsx
-import { getAllUsers } from '@/lib/users';
-import { getInitialLessons, AUDIENCES } from '@/lib/schedule';
 import ScheduleGrid from '@/components/schedule/ScheduleGrid';
+import { getAllUsers } from '@/lib/users';
+import { getAllLessons } from '@/lib/lessons';
+import type { Lesson } from '@/types/lesson';
 import type { User } from '@/types/user';
 
-export default async function TeacherSchedulePage() {
-  // Возьмём демо-пользователей и демо-уроки
-  const users = (await getAllUsers()) as User[];
-  const lessons = await getInitialLessons();
+const AUDIENCES = ['216', '222', '223', '244', '260', '11А'];
 
-  // Для демо: currentUser — первая teacher в списке (в реальном приложении ставится через auth)
+export default async function TeacherSchedulePage() {
+  const users: User[] = await getAllUsers();
+  const lessons: Lesson[] = await getAllLessons();
+
+  // пока текущий пользователь — первый педагог, если есть
   const currentUser = users.find((u) => u.role === 'teacher') ?? users[0];
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">Расписание — преподаватель</h1>
+      <h1 className="text-2xl font-semibold mb-4">Расписание</h1>
+
       <div className="bg-white p-6 rounded shadow">
         <ScheduleGrid
           initialLessons={lessons}

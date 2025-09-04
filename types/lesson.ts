@@ -1,14 +1,16 @@
 // types/lesson.ts
-export type LessonStatus = 'ok' | 'scheduled' | 'cancelled' | 'transfer';
+export type LessonStatus = 'scheduled' | 'cancelled' | 'transfer' | 'makeup';
 
 export type Lesson = {
   id: string;
+  // аудитория/аудитории — одна аудитория для занятия
+  audience: string;
+  // час начала, целое (например 9, 10, 14)
+  startHour: number;
+  // длительность в часах (может быть дробной, но пока используем целые)
+  durationHours: number;
   teacherId: string;
-  studentName?: string;
-  auditorium: string;      // пример: "216", "11A"
-  startHour: number;       // час начала, целое (9..22)
-  durationHours: number;   // длительность в часах (1, 2 ...)
+  studentName: string;
   status?: LessonStatus;
-  createdBy?: string;      // id того, кто создал запись
-  note?: string;
+  createdBy?: string;
 };

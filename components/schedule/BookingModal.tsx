@@ -2,171 +2,191 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import type { Lesson } from '@/types/lesson';
-
-type TeacherOption = { id: string; name: string };
+import type { Lesson, LessonStatus } from '@/types/lesson';
+import type { User } from '@/types/user';
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  initialLesson?: Lesson | null;
-  onSave?: (lesson: Lesson) => void;
-  defaultHour?: number;
+  onSave: (lesson: Lesson) => void;
+  onDelete?: (id: string) => void;
+  initial?: Lesson | null;
+  teachers: User[];
+  audiences: string[];
   defaultAuditorium?: string;
-  teachers?: TeacherOption[];
+  defaultStartHour?: number;
+  currentUser?: User | null;
 };
 
 export default function BookingModal({
   open,
   onClose,
-  initialLesson = null,
   onSave,
-  defaultHour = 10,
-  defaultAuditorium = '216',
-  teachers = [],
+  onDelete,
+  initial = null,
+  teachers,
+  audiences,
+  defaultAuditorium,
+  defaultStartHour,
+  currentUser,
 }: Props) {
-  const [studentName, setStudentName] = useState<string>(initialLesson?.studentName ?? '');
-  const [startHour, setStartHour] = useState<number>(initialLesson?.startHour ?? defaultHour);
-  const [durationHours, setDurationHours] = useState<number>(initialLesson?.durationHours ?? 1);
-  const [auditorium, setAuditorium] = useState<string>(initialLesson?.auditorium ?? defaultAuditorium);
-  const [teacherId, setTeacherId] = useState<string>(initialLesson?.teacherId ?? (teachers[0]?.id ?? ''));
-  const [status, setStatus] = useState<Lesson['status'] | undefined>(initialLesson?.status);
+  const [studentName, setStudentName] = useState(initial?.studentName ?? '');
+  const [teacherId, setTeacherId] = useState(initial?.teacherId ?? teachers?.[0]?.id ?? '');
+  const [auditorium, setAuditorium] = useState(initial?.auditorium ?? defaultAuditorium ?? audiences?.[0]);
+  const [startHour, setStartHour] = useState<number>(initial?.startHour ?? defaultStartHour ?? 9);
+  const [durationHours, setDurationHours] = useState<number>(initial?.durationHours ?? 1);
+  const [status, setStatus] = useState<LessonStatus>(initial?.status ?? 'scheduled');
 
   useEffect(() => {
     if (open) {
-      setStudentName(initialLesson?.studentName ?? '');
-      setStartHour(initialLesson?.startHour ?? defaultHour);
-      setDurationHours(initialLesson?.durationHours ?? 1);
-      setAuditorium(initialLesson?.auditorium ?? defaultAuditorium);
-      setTeacherId(initialLesson?.teacherId ?? (teachers[0]?.id ?? ''));
-      setStatus(initialLesson?.status);
+      setStudentName(initial?.studentName ?? '');
+      setTeacherId(initial?.teacherId ?? teachers?.[0]?.id ?? '');
+      setAuditorium(initial?.auditorium ?? defaultAuditorium ?? audiences?.[0]);
+      setStartHour(initial?.startHour ?? defaultStartHour ?? 9);
+      setDurationHours(initial?.durationHours ?? 1);
+      setStatus(initial?.status ?? 'scheduled');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialLesson]);
-
-  function handleSave() {
-    const payload: Lesson = {
-      id: initialLesson?.id ?? `l_${Date.now()}`,
-      auditorium,
-      startHour,
-      durationHours,
-      teacherId: teacherId || 'unknown',
-      studentName: studentName || '—',
-      status: status ?? 'scheduled',
-      // исправлено: используем цепочку nullish coalescing (не смешиваем ?? и ||)
-      createdBy: initialLesson?.createdBy ?? teacherId ?? 'system',
-      createdAt: initialLesson?.createdAt ?? new Date().toISOString(),
-    };
-
-    onSave?.(payload);
-    onClose();
-  }
+  }, [open, initial]);
 
   if (!open) return null;
 
+  function handleSave() {
+    // validation minimal
+    if (!teacherId) {
+      alert('Выберите преподавателя');
+      return;
+    }
+    const lesson: Lesson = {
+      id: initial?.id ?? `l_${Date.now().toString(36)}`,
+      auditorium: auditorium ?? audiences[0],
+      startHour,
+      durationHours: Math.max(1, Math.round(durationHours)),
+      teacherId,
+      studentName: studentName || '—',
+      status,
+      createdBy: initial?.createdBy ?? currentUser?.id ?? 'system',
+      createdAt: initial?.createdAt ?? new Date().toISOString(),
+    };
+    onSave(lesson);
+    onClose();
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-white rounded-lg shadow-xl w-[min(720px,95%)] p-6 z-60">
+        <h3 className="text-lg font-semibold mb-4">{initial ? 'Редактировать урок' : 'Новый урок'}</h3>
 
-      <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl p-6 shadow-xl">
-        <h3 className="text-lg font-semibold mb-4">Запись на урок</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col text-sm">
+            Преподаватель
+            <select
+              value={teacherId}
+              onChange={(e) => setTeacherId(e.target.value)}
+              className="mt-1 p-2 border rounded"
+            >
+              {teachers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <div className="space-y-3">
-          <label className="block">
-            <div className="text-xs text-gray-600 mb-1">Ученик</div>
+          <label className="flex flex-col text-sm">
+            Аудитория
+            <select
+              value={auditorium}
+              onChange={(e) => setAuditorium(e.target.value)}
+              className="mt-1 p-2 border rounded"
+            >
+              {audiences.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="flex flex-col text-sm">
+            Начало (час)
             <input
+              type="number"
+              min={0}
+              max={23}
+              value={startHour}
+              onChange={(e) => setStartHour(Number(e.target.value))}
+              className="mt-1 p-2 border rounded"
+            />
+          </label>
+
+          <label className="flex flex-col text-sm">
+            Длительность (часы)
+            <input
+              type="number"
+              min={1}
+              max={8}
+              value={durationHours}
+              onChange={(e) => setDurationHours(Number(e.target.value))}
+              className="mt-1 p-2 border rounded"
+            />
+          </label>
+
+          <label className="flex flex-col text-sm col-span-2">
+            Ученик / описание
+            <input
+              type="text"
               value={studentName}
               onChange={(e) => setStudentName(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              className="mt-1 p-2 border rounded"
               placeholder="Имя ученика"
             />
           </label>
 
-          <div className="flex gap-2">
-            <label className="flex-1">
-              <div className="text-xs text-gray-600 mb-1">Аудитория</div>
-              <input
-                value={auditorium}
-                onChange={(e) => setAuditorium(e.target.value)}
-                className="w-full px-3 py-2 border rounded"
-                placeholder="216"
-              />
-            </label>
-
-            <label className="w-28">
-              <div className="text-xs text-gray-600 mb-1">Час</div>
-              <input
-                type="number"
-                min={0}
-                max={23}
-                value={startHour}
-                onChange={(e) => setStartHour(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded"
-              />
-            </label>
-
-            <label className="w-28">
-              <div className="text-xs text-gray-600 mb-1">Длительность (ч)</div>
-              <input
-                type="number"
-                min={1}
-                max={8}
-                value={durationHours}
-                onChange={(e) => setDurationHours(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded"
-              />
-            </label>
-          </div>
-
-          <label>
-            <div className="text-xs text-gray-600 mb-1">Преподаватель</div>
+          <label className="flex flex-col text-sm">
+            Статус
             <select
-              value={teacherId}
-              onChange={(e) => setTeacherId(e.target.value)}
-              className="w-full px-3 py-2 border rounded"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as LessonStatus)}
+              className="mt-1 p-2 border rounded"
             >
-              {teachers.length === 0 ? (
-                <option value="">{'Нет преподавателей'}</option>
-              ) : (
-                teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
-
-          <label>
-            <div className="text-xs text-gray-600 mb-1">Статус</div>
-            <select
-              value={status ?? ''}
-              onChange={(e) => setStatus((e.target.value as Lesson['status']) || undefined)}
-              className="w-full px-3 py-2 border rounded"
-            >
-              <option value="">(по умолчанию)</option>
-              <option value="scheduled">Запланировано</option>
-              <option value="confirmed">Подтверждено</option>
-              <option value="ok">OK</option>
-              <option value="makeup">Отработка</option>
+              <option value="scheduled">Запланирован</option>
+              <option value="ok">Проведен</option>
               <option value="transfer">Перенос</option>
-              <option value="cancelled">Отменено</option>
-              <option value="draft">Черновик</option>
+              <option value="canceled">Отменен</option>
             </select>
           </label>
-        </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 border rounded">
-            Отмена
-          </button>
-          <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded">
-            Сохранить
-          </button>
+          <div className="col-span-2 flex justify-between items-center mt-3">
+            <div className="text-xs text-gray-500">
+              Создан: {initial?.createdAt ? new Date(initial.createdAt).toLocaleString() : '—'} by{' '}
+              {initial?.createdBy ?? currentUser?.id ?? '—'}
+            </div>
+
+            <div className="flex gap-2">
+              {initial && onDelete && (
+                <button
+                  onClick={() => {
+                    if (confirm('Удалить урок?')) {
+                      onDelete(initial.id);
+                      onClose();
+                    }
+                  }}
+                  className="px-3 py-2 bg-red-50 text-red-700 border border-red-100 rounded"
+                >
+                  Удалить
+                </button>
+              )}
+
+              <button onClick={onClose} className="px-3 py-2 border rounded">
+                Отмена
+              </button>
+              <button onClick={handleSave} className="px-4 py-2 bg-primary text-white rounded">
+                Сохранить
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

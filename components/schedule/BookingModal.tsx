@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import type { User } from '@/types/user';
+import type { Lesson, LessonStatus } from '@/types/lesson';
 
 export type LessonPayload = {
   teacherId: string;
@@ -10,7 +11,7 @@ export type LessonPayload = {
   auditorium: string;
   startHour: number;
   durationHours: number;
-  status?: 'ok' | 'cancelled' | 'transfer';
+  status?: LessonStatus;
 };
 
 export default function BookingModal({
@@ -35,7 +36,7 @@ export default function BookingModal({
   const [auditorium, setAuditorium] = useState<string>(defaultAuditorium ?? (auditoriums[0] ?? ''));
   const [startHour, setStartHour] = useState<number>(defaultHour ?? 9);
   const [durationHours, setDurationHours] = useState<number>(1);
-  const [status, setStatus] = useState<'ok' | 'cancelled' | 'transfer'>('ok');
+  const [status, setStatus] = useState<Lesson['status']>('ok');
 
   useEffect(() => {
     if (open) {
@@ -57,7 +58,7 @@ export default function BookingModal({
 
   function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!auditorium) return;
+    if (!auditorium || !teacherId) return;
     onCreate({
       teacherId,
       studentName: studentName || '(Ученик)',
@@ -72,13 +73,11 @@ export default function BookingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* overlay */}
       <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
         aria-hidden="true"
       />
-      {/* panel */}
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6 z-10">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Добавить занятие</h3>
@@ -148,7 +147,6 @@ export default function BookingModal({
                 <option value={1}>1</option>
                 <option value={2}>2</option>
                 <option value={3}>3</option>
-                <option value={4}>4</option>
               </select>
             </div>
 

@@ -1,109 +1,228 @@
-/* app/globals.css */
+/* app/globals.css
+   Полный глобальный стиль для проекта MusicLab.
+   Содержит:
+   - Tailwind preflight (base/components/utilities)
+   - CSS-переменные бренда
+   - базовый сброс и типографику (использует переменные next/font)
+   - утилиты для кнопок, модалей, аватаров, ресайзера колонок расписания и т.д.
+*/
 
-/* Tailwind directives (если Tailwind настроен) */
+/* === Tailwind: базовые слои === */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* === Брендовые переменные === */
+/* === Brand variables === */
 :root {
-  --color-primary: #FF7A59; /* оранжевый — кнопки и акценты */
-  --color-primary-700: #e46a49;
-  --text-default: #0b0b0b; /* заголовки — чёрные */
-  --bg-soft: #FBFAFC;
-  --card-bg: #ffffff;
-  --font-roboto: 'Roboto', sans-serif;
-  --font-pt-sans: 'PT Sans', sans-serif;
+  /* Брендовые цвета (можешь заменить на конкретные значения) */
+  --brand-orange: #ff8a00;    /* primary */
+  --brand-orange-600: #e76f00;
+  --brand-purple: #7c3aed;    /* secondary */
+  --brand-text: #111111;
+  --muted: #6b7280;
+  --bg-surface: #ffffff;
+  --glass: rgba(255,255,255,0.6);
+
+  /* layout / sizes */
+  --radius-lg: 12px;
+  --radius-sm: 8px;
+  --transition-fast: 160ms;
+  --transition-base: 220ms;
 }
 
-/* Базовые стили */
+/* === Base reset / typography === */
+/* Tailwind preflight уже делает большую часть сброса.
+   Добавим шрифты, переменные от next/font и небольшие удобства. */
 html, body, #__next {
   height: 100%;
-  background: var(--bg-soft);
-  color: var(--text-default);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-surface);
+  color: var(--brand-text);
+  margin: 0;
 }
 
-/* Заголовок — брендовый шрифт (PT Sans приоритетно) */
-.brand-headline {
-  font-family: var(--font-pt-sans), var(--font-roboto), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+/* Используем шрифтовые переменные, которые задаются в layout через next/font:
+   — --font-roboto
+   — --font-pt-sans
+   Если у тебя другие имена переменных — подправь. */
+body {
+  font-family: var(--font-roboto, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial);
+  line-height: 1.45;
+  font-size: 16px;
+  background: linear-gradient(180deg, rgba(124,58,237,0.02), rgba(99,102,241,0.01));
 }
+
+/* Заголовки по умолчанию могут использовать вторичный шрифт */
+h1, h2, h3, h4 {
+  font-family: var(--font-pt-sans, var(--font-roboto));
+  color: var(--brand-text);
+  margin: 0;
+}
+
+/* Центровка основного контейнера (если нужен) */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* === Простые утилиты (если не хотите менять tailwind config) === */
+.bg-primary { background-color: var(--brand-orange) !important; }
+.bg-primary-600 { background-color: var(--brand-orange-600) !important; }
+.text-primary { color: var(--brand-orange) !important; }
+.border-muted { border-color: var(--muted) !important; }
 
 /* Кнопки */
-.btn-primary {
-  background-color: var(--color-primary);
-  color: white;
-  padding: 0.6rem 1.25rem;
-  border-radius: 12px;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-lg);
   font-weight: 600;
-  display: inline-block;
-  box-shadow: 0 8px 18px rgba(255,122,89,0.14);
-  transition: transform .12s ease, opacity .12s ease;
-  border: none;
+  transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+  cursor: pointer;
 }
-.btn-primary:hover { transform: translateY(-2px); opacity: 0.98; cursor: pointer; }
+.btn:active { transform: translateY(1px); }
+.btn:focus { outline: 3px solid rgba(124,58,237,0.12); outline-offset: 2px; }
+
+.btn-primary {
+  background: var(--brand-orange);
+  color: white;
+  border: 1px solid rgba(0,0,0,0.03);
+  box-shadow: 0 6px 18px rgba(17,24,39,0.06);
+}
+.btn-primary:hover { background: var(--brand-orange-600); }
 
 .btn-ghost {
   background: transparent;
   border: 1px solid rgba(0,0,0,0.06);
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
+  color: var(--brand-text);
 }
 
-/* Сайдбар */
-.admin-sidebar {
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));
-}
-
-/* Карточка */
+/* Кард */
 .card {
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(15,15,15,0.04);
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 18px rgba(17,24,39,0.04);
   padding: 1rem;
 }
 
-/* Контейнер админки */
-.admin-main {
-  padding: 2.25rem;
-}
-
-/* Отступы/выровн. для hero */
-.hero-container {
-  padding: 2rem;
-}
-
-/* --- Доп. стили для кнопок ролей с иконками --- */
-.role-btn {
+/* Модальные оверлеи и центрирование */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.9rem;
-  border-radius: 12px;
-  background: rgba(11,11,11,0.02);
-  border: 1px solid rgba(0,0,0,0.04);
-  transition: background .12s ease, transform .12s ease;
+  justify-content: center;
+  z-index: 60;
 }
-.role-btn:hover { background: rgba(11,11,11,0.04); transform: translateY(-2px); cursor: pointer; }
+.modal {
+  width: min(720px, 96%);
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 30px 60px rgba(2,6,23,0.3);
+}
 
-.role-icon {
+/* Spinner — используется в расписании */
+.spinner {
   width: 40px;
   height: 40px;
   border-radius: 9999px;
-  background: var(--color-primary);
+  border: 4px solid rgba(0,0,0,0.08);
+  border-top-color: rgba(0,0,0,0.24);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Аватар */
+.avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: white; /* icons will inherit this color */
-  box-shadow: 0 8px 18px rgba(255,122,89,0.12);
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #f3f4f6;
 }
 
-/* Модал */
-.modal-card {
-  width: 20rem;
-  border-radius: 14px;
-  padding: 1.25rem;
-  background: white;
-  box-shadow: 0 20px 50px rgba(16,24,40,0.2);
+/* Роль-карточки (выбор роли на стартовом экране) */
+.role-card {
+  display: inline-flex;
+  gap: .75rem;
+  align-items: center;
+  padding: .8rem 1rem;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 8px 20px rgba(2,6,23,0.04);
+  transition: transform var(--transition-base) ease, box-shadow var(--transition-base) ease;
+  cursor: pointer;
+}
+.role-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(2,6,23,0.06); }
+.role-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(7,89,133,0.06));
+}
+
+/* Schedule specific helpers (resizer handle) */
+.col-resizer {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+/* Анимация нажатия (краткое scale) */
+.pressed {
+  transform: scale(.97);
+  transition: transform 120ms ease;
+}
+
+/* Тонкие стили для таблиц/табличных блоков */
+.table-like {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-like th, .table-like td {
+  padding: .6rem .75rem;
+  border-bottom: 1px solid rgba(15,23,42,0.04);
+}
+
+/* Утилиты отклонить/подтвердить (красный/зелёный) */
+.badge-danger { color: #b91c1c; }
+.badge-ghost { color: var(--muted); }
+
+/* Мелкие удобства */
+.container-wide { max-width: 1300px; margin: 0 auto; padding: 2rem; }
+.small { font-size: .875rem; }
+.xs { font-size: .75rem; }
+
+/* Сбрасываем некоторые негативные default-ы */
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+
+/* === Accessibility helpers === */
+.sr-only {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
+
+/* === Дополнительно: медиа-правила для отзывчивости === */
+@media (max-width: 768px) {
+  main { padding: 1.25rem; }
+  .role-card { padding: .6rem .8rem; gap: .5rem; }
+  .role-icon { width: 36px; height: 36px; border-radius: 8px; }
 }

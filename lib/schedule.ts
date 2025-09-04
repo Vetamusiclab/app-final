@@ -1,44 +1,60 @@
 // lib/schedule.ts
 import type { Lesson } from '@/types/lesson';
 
-export const AUDIENCES = ['216', '222', '223', '244', '260', '11A'];
-
-// helper — generate stable id without uuid dependency
-function makeId(prefix = 'l') {
-  return prefix + '_' + Math.random().toString(36).slice(2, 9);
+/** Небольшая утилита для генерации id */
+function makeId(len = 8) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let s = '';
+  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
 }
 
-// Demo lessons (time in HH:MM, hourly slots 08:00–20:00)
-export const initialLessons: Lesson[] = [
+/** Список аудиторий (по умолчанию) */
+export const AUDIENCES = ['216', '222', '223', '244', '260', '11A'] as const;
+
+/** Демонстрационные уроки — формат соответствует types/lesson.ts */
+export const demoLessons: Lesson[] = [
   {
     id: makeId(),
-    audience: '216',
-    time: '10:00',
+    auditorium: '216',
+    startHour: 10,
+    durationHours: 1,
     teacherId: 't1',
     studentName: 'Иван Петров',
-    status: 'scheduled',
-    createdBy: 't1'
+    status: 'ok',
+    createdBy: 't1',
   },
   {
     id: makeId(),
-    audience: '222',
-    time: '11:00',
-    teacherId: 't2',
+    auditorium: '222',
+    startHour: 12,
+    durationHours: 2,
+    teacherId: 't1',
     studentName: 'Анна Смирнова',
-    status: 'one-off',
-    createdBy: 'a1'
+    status: 'ok',
+    createdBy: 't1',
   },
   {
     id: makeId(),
-    audience: '223',
-    time: '14:00',
-    teacherId: 't3',
-    studentName: 'Пётр Орлов',
-    status: 'cancelled',
-    createdBy: 't3'
-  }
+    auditorium: '223',
+    startHour: 16,
+    durationHours: 1,
+    teacherId: 't2',
+    studentName: 'Мария Иванова',
+    status: 'ok',
+    createdBy: 't2',
+  },
+  // add more demo entries if нужно
 ];
 
-export function getInitialLessons(): Promise<Lesson[]> {
-  return Promise.resolve(initialLessons);
+export function getAllLessons(): Promise<Lesson[]> {
+  return Promise.resolve(demoLessons);
+}
+
+export function getLessonsByAuditorium(auditorium: string): Promise<Lesson[]> {
+  return Promise.resolve(demoLessons.filter(l => l.auditorium === auditorium));
+}
+
+export function getLessonById(id: string): Promise<Lesson | undefined> {
+  return Promise.resolve(demoLessons.find(l => l.id === id));
 }

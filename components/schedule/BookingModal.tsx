@@ -1,10 +1,10 @@
+// components/schedule/BookingModal.tsx
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { User } from '@/types/user';
 
-type LessonPayload = {
+export type LessonPayload = {
   teacherId: string;
   studentName?: string;
   auditorium: string;
@@ -37,8 +37,7 @@ export default function BookingModal({
   const [durationHours, setDurationHours] = useState<number>(1);
   const [status, setStatus] = useState<'ok' | 'cancelled' | 'transfer'>('ok');
 
-  // update defaults when modal opens with values
-  useMemo(() => {
+  useEffect(() => {
     if (open) {
       setTeacherId(teachers[0]?.id ?? '');
       setAuditorium(defaultAuditorium ?? (auditoriums[0] ?? ''));
@@ -47,7 +46,14 @@ export default function BookingModal({
       setStudentName('');
       setStatus('ok');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultAuditorium, defaultHour, teachers, auditoriums]);
+
+  const hours = useMemo(() => {
+    const arr: number[] = [];
+    for (let h = 9; h <= 22; h++) arr.push(h);
+    return arr;
+  }, []);
 
   function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -62,137 +68,110 @@ export default function BookingModal({
     });
   }
 
-  // hours options 9..22
-  const hours = Array.from({ length: 22 - 9 + 1 }, (_, i) => 9 + i);
+  if (!open) return null;
 
   return (
-    <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/40" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <Transition.Child
-            as={Fragment}
-            enter="transform transition ease-out duration-200"
-            enterFrom="opacity-0 translate-y-4"
-            enterTo="opacity-100 translate-y-0"
-            leave="transform transition ease-in duration-150"
-            leaveFrom="opacity-100 translate-y-0"
-            leaveTo="opacity-0 translate-y-4"
-          >
-            <Dialog.Panel className="max-w-md w-full bg-white rounded-2xl p-6 shadow-xl">
-              <Dialog.Title className="text-lg font-semibold mb-4">Добавить занятие</Dialog.Title>
-
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-sm text-gray-600">Ученик</label>
-                  <input
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    className="mt-1 w-full border px-3 py-2 rounded"
-                    placeholder="Имя ученика"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-gray-600">Преподаватель</label>
-                  <select
-                    value={teacherId}
-                    onChange={(e) => setTeacherId(e.target.value)}
-                    className="mt-1 w-full border px-3 py-2 rounded"
-                  >
-                    {teachers.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm text-gray-600">Аудитория</label>
-                    <select
-                      value={auditorium}
-                      onChange={(e) => setAuditorium(e.target.value)}
-                      className="mt-1 w-full border px-3 py-2 rounded"
-                    >
-                      {auditoriums.map((a) => (
-                        <option key={a} value={a}>
-                          {a}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-600">Начало</label>
-                    <select
-                      value={startHour}
-                      onChange={(e) => setStartHour(Number(e.target.value))}
-                      className="mt-1 w-full border px-3 py-2 rounded"
-                    >
-                      {hours.map((h) => (
-                        <option key={h} value={h}>
-                          {String(h).padStart(2, '0')}:00
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm text-gray-600">Длительность (ч)</label>
-                    <select
-                      value={durationHours}
-                      onChange={(e) => setDurationHours(Number(e.target.value))}
-                      className="mt-1 w-full border px-3 py-2 rounded"
-                    >
-                      <option value={1}>1</option>
-                      <option value={2}>2</option>
-                      <option value={3}>3</option>
-                      <option value={4}>4</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-600">Статус</label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as any)}
-                      className="mt-1 w-full border px-3 py-2 rounded"
-                    >
-                      <option value="ok">Обычное</option>
-                      <option value="transfer">Перенос / разовая</option>
-                      <option value="cancelled">Отмена</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 mt-4">
-                  <button type="button" onClick={onClose} className="px-4 py-2 border rounded">
-                    Отмена
-                  </button>
-                  <button type="submit" className="px-4 py-2 bg-[#FF8A00] text-white rounded">
-                    Сохранить
-                  </button>
-                </div>
-              </form>
-            </Dialog.Panel>
-          </Transition.Child>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* overlay */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      {/* panel */}
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6 z-10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Добавить занятие</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
         </div>
-      </Dialog>
-    </Transition.Root>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-600">Ученик</label>
+            <input
+              value={studentName}
+              onChange={(e) => setStudentName(e.target.value)}
+              className="mt-1 w-full border px-3 py-2 rounded"
+              placeholder="Имя ученика"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600">Преподаватель</label>
+            <select
+              value={teacherId}
+              onChange={(e) => setTeacherId(e.target.value)}
+              className="mt-1 w-full border px-3 py-2 rounded"
+            >
+              {teachers.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-gray-600">Аудитория</label>
+              <select
+                value={auditorium}
+                onChange={(e) => setAuditorium(e.target.value)}
+                className="mt-1 w-full border px-3 py-2 rounded"
+              >
+                {auditoriums.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-600">Начало</label>
+              <select
+                value={startHour}
+                onChange={(e) => setStartHour(Number(e.target.value))}
+                className="mt-1 w-full border px-3 py-2 rounded"
+              >
+                {hours.map((h) => (
+                  <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-gray-600">Длительность (ч)</label>
+              <select
+                value={durationHours}
+                onChange={(e) => setDurationHours(Number(e.target.value))}
+                className="mt-1 w-full border px-3 py-2 rounded"
+              >
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+                <option value={4}>4</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-600">Статус</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="mt-1 w-full border px-3 py-2 rounded"
+              >
+                <option value="ok">Обычное</option>
+                <option value="transfer">Перенос / разовая</option>
+                <option value="cancelled">Отмена</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded">Отмена</button>
+            <button type="submit" className="px-4 py-2 bg-[#FF8A00] text-white rounded">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

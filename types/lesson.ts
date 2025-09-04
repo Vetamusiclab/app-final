@@ -1,5 +1,5 @@
 // types/lesson.ts
-export type LessonStatus = 'ok' | 'cancelled' | 'transfer';
+export type LessonStatus = 'ok' | 'scheduled' | 'cancelled' | 'transfer';
 
 export type Lesson = {
   id: string;

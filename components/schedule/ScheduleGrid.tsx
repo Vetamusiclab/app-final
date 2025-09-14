@@ -1,20 +1,52 @@
 // components/schedule/ScheduleGrid.tsx
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { Lesson } from '@/types/lesson';
 import type { User } from '@/types/user';
-import BookingModal from './BookingModal';
-import ScheduleControls from './ScheduleControls';
+import { Mic, Music, User as UserIcon } from 'lucide-react';
 
 type Props = {
-  initialLessons: Lesson[];
-  teachers: User[];
-  audiences: string[]; // e.g. ['216','222',...]
+  initialLessons: Lesson[]; // массив уроков
+  teachers: User[]; // все педагоги (для легенды/цветов)
+  audiences: string[]; // список аудиторий, например ['216','222',...]
   currentUser: User;
-  startHour?: number; // default 9
-  endHour?: number;   // default 22 (last visible start hour will be endHour-1)
+  startHour?: number; // например 9
+  endHour?: number;   // например 22
 };
+
+const DEFAULT_AUD_WIDTH = 260;
+const TIME_WIDTH = 80;
+const ROW_HEIGHT = 64; // px per hour row
+
+function getAudience(l: Lesson) {
+  // поддерживаем разные названия полей
+  // @ts-ignore
+  return l.audience || l.auditorium || l.auditor || l.room || '';
+}
+
+function hashToColor(id: string) {
+  const palette = [
+    '#7C3AED', // violet
+    '#F97316', // orange
+    '#06B6D4', // cyan
+    '#EF4444', // red
+    '#10B981', // green
+    '#6366F1', // indigo
+    '#F59E0B', // amber
+  ];
+  let n = 0;
+  for (let i = 0; i < id.length; i++) n = (n * 31 + id.charCodeAt(i)) % 100000;
+  return palette[n % palette.length];
+}
+
+function getIconForTeacher(t?: User | null) {
+  if (!t) return UserIcon;
+  const dirs = (t.directions || []).map((d: string) => d.toLowerCase());
+  if (dirs.some((d: string) => d.includes('вокал'))) return Mic;
+  if (dirs.some((d: string) => d.includes('фортепиано') || d.includes('фортеп'))) return Music;
+  return UserIcon;
+}
 
 export default function ScheduleGrid({
   initialLessons,
@@ -24,317 +56,344 @@ export default function ScheduleGrid({
   startHour = 9,
   endHour = 22,
 }: Props) {
-  // hours 9..21 when endHour = 22
+  // локальное состояние для уроков (демо / editable локально)
+  const [lessons, setLessons] = useState<Lesson[]>(initialLessons ?? []);
+  // колонка: sequence = [time, aud0, aud1, time, aud2, aud3, time, ...]
+  const sequence = useMemo(() => {
+    const seq: { type: 'time' | 'aud'; key?: string }[] = [];
+    // push initial time
+    seq.push({ type: 'time' });
+    for (let i = 0; i < audiences.length; i += 2) {
+      const a1 = audiences[i];
+      const a2 = audiences[i + 1];
+      if (a1) seq.push({ type: 'aud', key: a1 });
+      if (a2) seq.push({ type: 'aud', key: a2 });
+      // push time after every group
+      seq.push({ type: 'time' });
+    }
+    return seq;
+  }, [audiences]);
+
+  // ширины колонок
+  const [colWidths, setColWidths] = useState<number[]>(
+    () => sequence.map((c) => (c.type === 'time' ? TIME_WIDTH : DEFAULT_AUD_WIDTH))
+  );
+
+  // масштаб (если нужен) — можно прокинуть извне / управлять через ScheduleControls
+  const [scale, setScale] = useState<number>(1);
+
+  // modal state
+  const [modal, setModal] = useState<{
+    open: boolean;
+    hour?: number;
+    audience?: string;
+    lesson?: Lesson | null;
+  }>({ open: false, hour: undefined, audience: undefined, lesson: null });
+
+  // хелперы для поиска уроков
+  function lessonStartAt(aud: string, hour: number) {
+    return lessons.find((l) => {
+      const a = getAudience(l);
+      return a === aud && Number(l.startHour) === Number(hour);
+    });
+  }
+  function lessonCovering(aud: string, hour: number) {
+    return lessons.find((l) => {
+      const a = getAudience(l);
+      const s = Number(l.startHour);
+      const d = Number(l.durationHours ?? 1);
+      return a === aud && s < hour && s + d > hour;
+    });
+  }
+
+  // изменение ширины перетаскиванием
+  function startResize(colIndex: number, startX: number) {
+    const initWidth = colWidths[colIndex];
+    function onMove(e: MouseEvent) {
+      const dx = e.clientX - startX;
+      const newW = Math.max(60, Math.round(initWidth + dx));
+      setColWidths((prev) => {
+        const copy = [...prev];
+        copy[colIndex] = newW;
+        return copy;
+      });
+    }
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }
+
+  // открываем модал (создать/редактировать)
+  function openModal(audience?: string, hour?: number, lesson?: Lesson | null) {
+    setModal({ open: true, hour, audience, lesson: lesson || null });
+  }
+  function closeModal() {
+    setModal({ open: false, hour: undefined, audience: undefined, lesson: null });
+  }
+
+  function saveLesson(payload: Partial<Lesson> & { id?: string }) {
+    // если передан id — обновляем, иначе создаём
+    if (payload.id) {
+      setLessons((prev) => prev.map((p) => (p.id === payload.id ? { ...p, ...payload } as Lesson : p)));
+    } else {
+      const newLesson: Lesson = {
+        // @ts-ignore
+        id: `l_${Date.now()}`,
+        teacherId: payload.teacherId ?? currentUser?.id ?? 'system',
+        studentName: payload.studentName ?? '—',
+        // поле аудитории используем 'audience' (совместимость)
+        // @ts-ignore
+        audience: payload.audience ?? payload.auditorium ?? payload.audience,
+        startHour: payload.startHour ?? modal.hour ?? startHour,
+        durationHours: payload.durationHours ?? 1,
+        status: (payload as any).status ?? 'scheduled',
+        createdBy: currentUser?.id ?? 'system',
+        createdAt: new Date().toISOString(),
+      };
+      setLessons((prev) => [...prev, newLesson]);
+    }
+    closeModal();
+  }
+
+  // скелет таблицы часов
   const hours = useMemo(() => {
     const arr: number[] = [];
     for (let h = startHour; h < endHour; h++) arr.push(h);
     return arr;
   }, [startHour, endHour]);
 
-  const timeColWidth = 88;
-  const defaultColWidth = 260;
-  const minColWidth = 120;
-  const rowHeight = 64;
-
-  // local lessons state (so edits show immediately)
-  const [lessons, setLessons] = useState<Lesson[]>(() => initialLessons ?? []);
-
-  useEffect(() => setLessons(initialLessons ?? []), [initialLessons]);
-
-  // per-audience widths (px)
-  const [colWidths, setColWidths] = useState<number[]>(
-    () => audiences.map(() => defaultColWidth)
-  );
-
-  // when audiences change, reset widths
-  useEffect(() => setColWidths(audiences.map(() => defaultColWidth)), [audiences.join(',')]);
-
-  // zoom scale
-  const [scale, setScale] = useState<number>(1);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const gridRef = useRef<HTMLDivElement | null>(null);
-
-  // dragging column resize
-  const dragRef = useRef<{ startX: number; colIndex: number; startWidth: number } | null>(null);
-
-  function onHandleMouseDown(e: React.MouseEvent, idx: number) {
-    dragRef.current = { startX: e.clientX, colIndex: idx, startWidth: colWidths[idx] };
-    e.preventDefault();
-  }
-
-  useEffect(() => {
-    function onMove(e: MouseEvent) {
-      const drag = dragRef.current;
-      if (!drag) return;
-      const delta = e.clientX - drag.startX;
-      setColWidths((prev) => {
-        const next = [...prev];
-        next[drag.colIndex] = Math.max(minColWidth, Math.round(drag.startWidth + delta));
-        return next;
-      });
-    }
-    function onUp() {
-      dragRef.current = null;
-    }
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, []);
-
-  // Fit to screen: set scale so all columns fit into container width
-  function fitToScreen() {
-    const container = containerRef.current;
-    if (!container) return;
-    const totalColsWidth = timeColWidth + colWidths.reduce((a, b) => a + b, 0);
-    const available = container.clientWidth - 16; // padding
-    const newScale = Math.min(1, available / totalColsWidth);
-    setScale(Number(newScale.toFixed(3)));
-  }
-
-  // recompute fit on resize
-  useEffect(() => {
-    fitToScreen();
-    const onResize = () => fitToScreen();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [colWidths]);
-
-  // helpers to add/update/delete lessons locally
-  function createLocalLesson(payload: Omit<Lesson, 'id' | 'createdAt'>) {
-    const id = `l${Math.random().toString(36).slice(2, 9)}`;
-    const newLesson: Lesson = { ...payload, id, createdAt: new Date().toISOString() };
-    setLessons((s) => [...s, newLesson]);
-    return newLesson;
-  }
-
-  function updateLocalLesson(id: string, patch: Partial<Lesson>) {
-    setLessons((s) => s.map((l) => (l.id === id ? { ...l, ...patch } : l)));
-  }
-
-  function deleteLocalLesson(id: string) {
-    setLessons((s) => s.filter((l) => l.id !== id));
-  }
-
-  // position helpers for grid
-  const gridTemplateColumns = `${timeColWidth}px ${colWidths.map((w) => `${w}px`).join(' ')}`;
-  const totalGridRows = hours.length + 1; // +1 for header row
-
-  // map teacherId => color
-  const teacherColors: Record<string, string> = useMemo(() => {
-    const palette = [
-      '#f97316', // orange
-      '#06b6d4', // cyan
-      '#7c3aed', // purple
-      '#ef4444', // red
-      '#10b981', // green
-      '#eab308', // amber
-      '#3b82f6', // blue
-      '#db2777', // pink
-    ];
-    const map: Record<string, string> = {};
-    let i = 0;
+  // legend mapping teachers -> colors + icon
+  const teacherColors = useMemo(() => {
+    const map = new Map<string, string>();
     for (const t of teachers) {
-      map[t.id] = palette[i % palette.length];
-      i++;
-    }
-    // ensure currentUser has color if teacher
-    if (currentUser && !map[currentUser.id]) {
-      map[currentUser.id] = palette[i % palette.length];
+      // если у пользователя есть поле color — используем, иначе хэш
+      // @ts-ignore
+      const col = (t as any).color || hashToColor(t.id || t.name || String(Math.random()));
+      map.set(t.id, col);
     }
     return map;
-  }, [teachers, currentUser]);
-
-  // occupied set so we can avoid drawing duplicate "lesson tiles"
-  const occupied = useMemo(() => {
-    const set = new Set<string>();
-    lessons.forEach((l) => {
-      for (let i = 0; i < (l.durationHours || 1); i++) {
-        set.add(`${l.auditorium}-${(l.startHour ?? 0) + i}`);
-      }
-    });
-    return set;
-  }, [lessons]);
-
-  // modal state
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
-  const [initialSlot, setInitialSlot] = useState<{ audience: string; hour: number } | null>(null);
-
-  function openCreate(aud: string, hour: number) {
-    setEditingLesson(null);
-    setInitialSlot({ audience: aud, hour });
-    setModalOpen(true);
-  }
-  function openEdit(lesson: Lesson) {
-    setEditingLesson(lesson);
-    setInitialSlot(null);
-    setModalOpen(true);
-  }
-
-  // click handlers for cells
-  function onCellClick(aud: string, hour: number) {
-    // if cell is covered by an existing lesson start, open that lesson
-    const start = lessons.find((l) => l.auditorium === aud && l.startHour === hour);
-    if (start) {
-      openEdit(start);
-      return;
-    }
-    // else open create modal
-    openCreate(aud, hour);
-  }
+  }, [teachers]);
 
   return (
-    <div className="flex flex-col gap-3">
-      <ScheduleControls
-        scale={scale}
-        setScale={setScale}
-        fitToScreen={fitToScreen}
-      />
-
-      <div ref={containerRef} className="rounded border bg-white p-2 overflow-auto">
-        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-          <div
-            ref={gridRef}
-            style={{
-              display: 'grid',
-              gridTemplateColumns,
-              gridAutoRows: `${rowHeight}px`,
-              gap: '1px',
-              background: '#e5e7eb',
-              alignItems: 'stretch',
-            }}
-          >
-            {/* Header time cell */}
-            <div className="bg-gray-100 flex items-center justify-center font-medium" style={{ gridColumn: '1', gridRow: '1' }}>
-              <div>Время / Аудитории</div>
-            </div>
-
-            {/* Audience headers (row 1) with drag handles */}
-            {audiences.map((aud, idx) => (
-              <div
-                key={`aud-head-${aud}`}
-                className="bg-gray-100 flex items-center justify-center font-medium relative"
-                style={{ gridColumn: 2 + idx, gridRow: 1 }}
-              >
-                <div className="px-2 truncate">{aud}</div>
-
-                {/* handle */}
-                <div
-                  onMouseDown={(e) => onHandleMouseDown(e, idx)}
-                  className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize"
-                  title="Переместите для изменения ширины"
-                />
-              </div>
-            ))}
-
-            {/* Time column cells (first column, rows 2..N) */}
-            {hours.map((h, rIdx) => (
-              <div
-                key={`time-${h}`}
-                className="bg-white flex items-center justify-center text-sm text-gray-700"
-                style={{ gridColumn: '1', gridRow: `${rIdx + 2}` }}
-              >
-                {String(h).padStart(2, '0')}:00
-              </div>
-            ))}
-
-            {/* Empty slot cells for each audience/hour to create the grid */}
-            {hours.map((h, rIdx) =>
-              audiences.map((aud, cIdx) => (
-                <div
-                  key={`cell-${aud}-${h}`}
-                  className="bg-white relative"
-                  style={{ gridColumn: 2 + cIdx, gridRow: `${rIdx + 2}` }}
-                >
-                  {/* clickable transparent layer */}
-                  <button
-                    onClick={() => onCellClick(aud, h)}
-                    className="absolute inset-0 w-full h-full text-left hover:bg-gray-50"
-                    aria-label={`Аудитория ${aud} ${h}:00`}
-                  />
-                </div>
-              ))
-            )}
-
-            {/* Render lesson tiles as grid items that can span rows */}
-            {lessons.map((l) => {
-              const colIndex = audiences.indexOf(l.auditorium);
-              if (colIndex === -1) return null;
-              const rowStart = (l.startHour ?? startHour) - startHour + 2; // +2 because header + time header
-              const rowSpan = Math.max(1, l.durationHours ?? 1);
-              const gridCol = 2 + colIndex;
-              const teacherColor = teacherColors[l.teacherId] ?? '#9ca3af';
-              const isCanceled = l.status === 'canceled';
-              return (
-                <div
-                  key={`lesson-${l.id}`}
-                  role="button"
-                  onClick={() => openEdit(l)}
-                  style={{
-                    gridColumn: gridCol,
-                    gridRow: `${rowStart} / span ${rowSpan}`,
-                    zIndex: 10,
-                  }}
-                >
-                  <div
-                    className="m-1 p-2 rounded shadow-md h-full overflow-hidden text-left"
-                    style={{
-                      background: isCanceled ? '#fecaca' : teacherColor,
-                      color: '#111827',
-                      minHeight: '0',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <div className="font-semibold truncate">{l.studentName ?? '—'}</div>
-                    <div className="text-xs truncate">
-                      {teachers.find((t) => t.id === l.teacherId)?.name ?? '—'} • {l.durationHours} ч
-                    </div>
-                    {l.status === 'transfer' && <div className="text-xs">⏱ перенос</div>}
-                    {l.status === 'canceled' && <div className="text-xs">❌ отмена</div>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+    <div className="w-full">
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <div className="text-sm text-gray-600">Расписание (drag заголовки колонок для изменения ширины)</div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setScale((s) => Math.max(0.5, +(s - 0.1).toFixed(2)))} className="px-2 py-1 border rounded">−</button>
+          <div className="text-sm px-2">{Math.round(scale * 100)}%</div>
+          <button onClick={() => setScale((s) => Math.min(2, +(s + 0.1).toFixed(2)))} className="px-2 py-1 border rounded">+</button>
         </div>
       </div>
 
-      {/* Booking modal */}
-      {modalOpen && (
-        <BookingModal
-          initialSlot={initialSlot}
-          lesson={editingLesson}
-          teachers={teachers}
-          audiences={audiences}
-          startHour={startHour}
-          endHour={endHour}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingLesson(null);
-            setInitialSlot(null);
-          }}
-          onSave={(payload) => {
-            if ((payload as Lesson).id) {
-              // update
-              updateLocalLesson((payload as Lesson).id, payload as Partial<Lesson>);
-            } else {
-              const created = createLocalLesson(payload as Omit<Lesson, 'id' | 'createdAt'>);
-              // nothing else needed; we already updated state
-            }
-            setModalOpen(false);
-          }}
-          onDelete={(id) => {
-            deleteLocalLesson(id);
-            setModalOpen(false);
-          }}
-        />
+      <div className="overflow-auto border rounded" style={{ transform: `scale(${scale})`, transformOrigin: 'left top' }}>
+        <table className="schedule-table w-max border-collapse" style={{ borderSpacing: 0 }}>
+          {/* colgroup — выставляем ширины */}
+          <colgroup>
+            {sequence.map((col, i) => (
+              <col key={i} style={{ width: `${colWidths[i]}px` }} />
+            ))}
+          </colgroup>
+
+          <thead className="sticky top-0 bg-white">
+            <tr>
+              {sequence.map((col, i) =>
+                col.type === 'time' ? (
+                  <th key={i} className="p-2 text-left text-sm font-medium border-b border-r bg-gray-50">
+                    Время
+                  </th>
+                ) : (
+                  <th key={i} className="p-2 text-left text-sm font-medium border-b border-r bg-gray-50 relative">
+                    <div className="flex items-center justify-between">
+                      <div className="truncate">{col.key}</div>
+                      {/* резайзер — только для audience колонок */}
+                      <div
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          startResize(i, e.clientX);
+                        }}
+                        className="absolute right-0 top-0 h-full w-2 cursor-col-resize"
+                        title="Изменить ширину"
+                      />
+                    </div>
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+
+          <tbody>
+            {hours.map((hour) => {
+              return (
+                <tr key={hour} style={{ height: ROW_HEIGHT }}>
+                  {sequence.map((col, ci) => {
+                    if (col.type === 'time') {
+                      // просто отображаем метку времени
+                      return (
+                        <td key={ci} className="p-2 border-r border-b bg-gray-50 text-sm font-medium sticky left-0">
+                          {String(hour).padStart(2, '0')}:00
+                        </td>
+                      );
+                    } else {
+                      const aud = col.key!;
+                      // не рендерим ячейку, если здесь занятие, которое началось раньше и перекрывает эту строку
+                      const covering = lessonCovering(aud, hour);
+                      if (covering) {
+                        return null; // пропускаем td — т.к. rowspan того урока покрывает эту строку
+                      }
+
+                      const lesson = lessonStartAt(aud, hour);
+                      if (lesson) {
+                        const dur = Number(lesson.durationHours || 1);
+                        const teacher = teachers.find((t) => t.id === lesson.teacherId);
+                        const color = (teacher && teacherColors.get(teacher.id)) || hashToColor(lesson.teacherId || lesson.createdBy || lesson.id);
+
+                        return (
+                          <td
+                            key={ci}
+                            rowSpan={dur}
+                            className="p-2 align-top cursor-pointer"
+                            onClick={() => openModal(aud, hour, lesson)}
+                          >
+                            <div className="h-full rounded-md shadow-sm" style={{ background: `${color}22`, border: `2px solid ${color}` }}>
+                              <div className="p-2">
+                                <div className="text-sm font-semibold" style={{ color }}>{lesson.studentName}</div>
+                                <div className="text-xs text-gray-600">{teacher?.name ?? '—'}</div>
+                                <div className="text-xs text-gray-500 mt-1">{`${hour}:00 — ${hour + dur}:00`}</div>
+                                <div className="text-xs mt-2 text-gray-600">Аудитория: {aud}</div>
+                              </div>
+                            </div>
+                          </td>
+                        );
+                      }
+
+                      // пустая ячейка
+                      return (
+                        <td
+                          key={ci}
+                          className="p-2 border-r border-b"
+                          onClick={() => openModal(aud, hour, null)}
+                        >
+                          <div className="h-full min-h-[48px]" />
+                        </td>
+                      );
+                    }
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Легенда (цвета педагогов) */}
+      <div className="mt-4 bg-white p-4 rounded shadow">
+        <h3 className="text-sm font-medium mb-3">Легенда — педагоги</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {teachers.map((t) => {
+            const col = teacherColors.get(t.id) || hashToColor(t.id || t.name || '');
+            const Icon = getIconForTeacher(t);
+            return (
+              <div key={t.id} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: col }}>
+                  <Icon size={16} color="#fff" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium">{t.name}</div>
+                  <div className="text-xs text-gray-500">{(t.directions || []).join(', ')}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Простой modal для создания/редактирования */}
+      {modal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={closeModal} />
+          <div className="relative bg-white rounded-lg p-6 w-[420px] z-10 shadow-lg">
+            <h4 className="text-lg font-semibold mb-3">{modal.lesson ? 'Редактировать занятие' : 'Создать занятие'}</h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-600">Аудитория</label>
+                <div className="mt-1">
+                  <select
+                    defaultValue={modal.audience}
+                    id="aud-select"
+                    className="w-full px-3 py-2 border rounded"
+                  >
+                    {audiences.map((a) => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-600">Час начала</label>
+                <div className="mt-1">
+                  <select id="hour-select" defaultValue={String(modal.hour ?? startHour)} className="w-full px-3 py-2 border rounded">
+                    {Array.from({ length: endHour - startHour }).map((_, i) => {
+                      const h = startHour + i;
+                      return <option key={h} value={String(h)}>{String(h).padStart(2, '0')}:00</option>;
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-600">Длительность (ч)</label>
+                <div className="mt-1">
+                  <input id="duration-input" defaultValue={(modal.lesson?.durationHours ?? 1).toString()} type="number" min={1} max={8} className="w-full px-3 py-2 border rounded" />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-600">Ученик / Название</label>
+                <div className="mt-1">
+                  <input id="student-input" defaultValue={modal.lesson?.studentName ?? ''} className="w-full px-3 py-2 border rounded" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 mt-4">
+                <button onClick={closeModal} className="px-3 py-2 border rounded">Отмена</button>
+                <button
+                  onClick={() => {
+                    const audSel = (document.getElementById('aud-select') as HTMLSelectElement).value;
+                    const hr = Number((document.getElementById('hour-select') as HTMLSelectElement).value);
+                    const dur = Number((document.getElementById('duration-input') as HTMLInputElement).value || 1);
+                    const student = (document.getElementById('student-input') as HTMLInputElement).value || '—';
+
+                    if (modal.lesson) {
+                      saveLesson({
+                        id: modal.lesson.id,
+                        audience: audSel,
+                        startHour: hr,
+                        durationHours: dur,
+                        studentName: student,
+                      } as Partial<Lesson>);
+                    } else {
+                      saveLesson({
+                        audience: audSel,
+                        startHour: hr,
+                        durationHours: dur,
+                        studentName: student,
+                        teacherId: currentUser?.id,
+                      } as Partial<Lesson>);
+                    }
+                  }}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded"
+                >
+                  Сохранить
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
-}
+                        }

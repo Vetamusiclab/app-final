@@ -1,29 +1,23 @@
-// components/schedule/ScheduleGrid.tsx
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { Lesson } from '@/types/lesson';
 import type { User } from '@/types/user';
+import ScheduleControls from './ScheduleControls';
+import BookingModal from './BookingModal'; // если у вас другой путь — исправьте
 
 type Props = {
   initialLessons: Lesson[];
-  teachers: User[]; // для легенды/цветов
-  audiences: string[];
-  currentUser: User;
-  startHour?: number;
-  endHour?: number;
+  teachers: User[]; // для цветов/имен
+  audiences: string[]; // ['216','222',...]
+  currentUser?: User | null;
+  startHour?: number; // e.g. 9
+  endHour?: number; // e.g. 22
 };
 
-const DEFAULT_AUD_WIDTH = 240;
-const TIME_WIDTH = 84;
-const ROW_HEIGHT = 64;
-
-function hashToColor(id: string) {
-  const palette = ['#7C3AED', '#F97316', '#06B6D4', '#EF4444', '#10B981', '#6366F1', '#F59E0B'];
-  let sum = 0;
-  for (let i = 0; i < id.length; i++) sum = (sum * 31 + id.charCodeAt(i)) % 10000;
-  return palette[sum % palette.length];
-}
+const DEFAULT_AUD_COL = 220;
+const DEFAULT_TIME_COL = 80;
+const MIN_COL = 60;
 
 export default function ScheduleGrid({
   initialLessons,
@@ -33,261 +27,297 @@ export default function ScheduleGrid({
   startHour = 9,
   endHour = 22,
 }: Props) {
-  const [lessons, setLessons] = useState<Lesson[]>(initialLessons ?? []);
-  // составляем последовательность колонок: Time, aud, aud, Time, aud, aud ...
-  const sequence = useMemo(() => {
-    const seq: { type: 'time' | 'aud'; key?: string }[] = [];
-    seq.push({ type: 'time' });
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // 1) формируем последовательность колонок: time, aud, aud, time, aud, aud, time...
+  const columns = useMemo(() => {
+    const cols: Array<{ type: 'time' | 'aud'; audience?: string }> = [];
+    cols.push({ type: 'time' });
     for (let i = 0; i < audiences.length; i += 2) {
-      const a1 = audiences[i];
-      const a2 = audiences[i + 1];
-      if (a1) seq.push({ type: 'aud', key: a1 });
-      if (a2) seq.push({ type: 'aud', key: a2 });
-      seq.push({ type: 'time' });
+      cols.push({ type: 'aud', audience: audiences[i] });
+      if (audiences[i + 1]) cols.push({ type: 'aud', audience: audiences[i + 1] });
+      cols.push({ type: 'time' });
     }
-    return seq;
+    return cols;
   }, [audiences]);
 
-  const [colWidths, setColWidths] = useState<number[]>(
-    () => sequence.map((c) => (c.type === 'time' ? TIME_WIDTH : DEFAULT_AUD_WIDTH))
-  );
+  // 2) колонки ширины (в пикселях)
+  const initialWidths = useMemo(() => {
+    return columns.map((c) => (c.type === 'time' ? DEFAULT_TIME_COL : DEFAULT_AUD_COL));
+  }, [columns]);
+
+  const [widths, setWidths] = useState<number[]>(initialWidths);
+  // если audiences меняются, сбросим ширины к дефолтным
+  useEffect(() => setWidths(initialWidths), [initialWidths]);
+
+  // 3) масштаб и fit-to-screen
   const [scale, setScale] = useState<number>(1);
+  const [fitToScreen, setFitToScreen] = useState<boolean>(true);
 
-  // modal state
-  const [modal, setModal] = useState<{ open: boolean; hour?: number; audience?: string; lesson?: Lesson | null }>({
-    open: false,
-    hour: undefined,
-    audience: undefined,
-    lesson: null,
-  });
+  // recompute required width
+  const requiredWidth = useMemo(() => widths.reduce((s, w) => s + w, 0), [widths]);
 
+  // recompute auto-scale when fitToScreen or container resized
+  useEffect(() => {
+    if (!fitToScreen) return;
+    function updateScale() {
+      const el = containerRef.current;
+      if (!el) return;
+      const cw = el.clientWidth || el.getBoundingClientRect().width;
+      if (requiredWidth === 0) return;
+      const newScale = Math.min(1, cw / requiredWidth);
+      setScale(+newScale.toFixed(3));
+    }
+    updateScale();
+    const ro = new ResizeObserver(updateScale);
+    if (containerRef.current) ro.observe(containerRef.current);
+    window.addEventListener('resize', updateScale);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateScale);
+    };
+  }, [requiredWidth, fitToScreen]);
+
+  // 4) column resizing logic (drag)
+  const dragging = useRef<{
+    leftIndex: number;
+    startX: number;
+    startLeft: number;
+    startRight: number;
+  } | null>(null);
+
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!dragging.current) return;
+      const { leftIndex, startX, startLeft, startRight } = dragging.current;
+      const dx = e.clientX - startX;
+      let newLeft = Math.max(MIN_COL, startLeft + dx);
+      let newRight = Math.max(MIN_COL, startRight - dx);
+      // if right would be < MIN, adjust left accordingly
+      if (newRight < MIN_COL) {
+        const deficit = MIN_COL - newRight;
+        newRight = MIN_COL;
+        newLeft = Math.max(MIN_COL, newLeft - deficit);
+      }
+      setWidths((prev) => {
+        const next = [...prev];
+        next[leftIndex] = newLeft;
+        next[leftIndex + 1] = newRight;
+        return next;
+      });
+    }
+    function onUp() {
+      dragging.current = null;
+      // if user had fitToScreen = true, we might want to recompute scale
+      if (fitToScreen) {
+        // force recompute by toggling
+        setFitToScreen(true);
+      }
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [fitToScreen]);
+
+  function onResizerMouseDown(index: number, e: React.MouseEvent) {
+    const leftIndex = index;
+    dragging.current = {
+      leftIndex,
+      startX: e.clientX,
+      startLeft: widths[leftIndex],
+      startRight: widths[leftIndex + 1],
+    };
+    e.preventDefault();
+  }
+
+  // helper: find lesson that starts at hour & audience
+  function lessonAt(audience: string, hour: number) {
+    return initialLessons.find((l) => {
+      const aud = (l as any).audience ?? (l as any).auditorium;
+      return aud === audience && Math.floor(l.startHour) === hour;
+    });
+  }
+
+  // get teacher color
+  function teacherColor(teacherId?: string) {
+    const t = teachers.find((x) => x.id === teacherId);
+    return t?.color ?? '#9ca3af';
+  }
+
+  // hours rows
   const hours = useMemo(() => {
     const arr: number[] = [];
     for (let h = startHour; h < endHour; h++) arr.push(h);
     return arr;
   }, [startHour, endHour]);
 
-  const teacherColors = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const t of teachers) {
-      map.set(t.id, (t as any).color || hashToColor(t.id || t.name || 'x'));
-    }
-    return map;
-  }, [teachers]);
+  // selected slot / modal stuff
+  const [openModal, setOpenModal] = useState(false);
+  const [modalData, setModalData] = useState<{ audience?: string; hour?: number; lesson?: Lesson } | null>(null);
 
-  function lessonStartAt(aud: string, hour: number) {
-    return lessons.find((l) => l.audience === aud && Number(l.startHour) === Number(hour));
-  }
-  function lessonCovering(aud: string, hour: number) {
-    return lessons.find((l) => {
-      const s = Number(l.startHour);
-      const d = Number(l.durationHours ?? 1);
-      return l.audience === aud && s < hour && s + d > hour;
-    });
+  function handleCellClick(audience?: string, hour?: number, lesson?: Lesson) {
+    setModalData({ audience, hour, lesson });
+    setOpenModal(true);
   }
 
-  function startResize(colIndex: number, startX: number) {
-    const init = colWidths[colIndex];
-    function onMove(e: MouseEvent) {
-      const dx = e.clientX - startX;
-      const newW = Math.max(60, Math.round(init + dx));
-      setColWidths((prev) => {
-        const copy = [...prev];
-        copy[colIndex] = newW;
-        return copy;
-      });
-    }
-    function onUp() {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    }
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+  // reset columns
+  function resetColumns() {
+    setWidths(initialWidths);
+    setScale(1);
+    setFitToScreen(true);
   }
 
-  function openModal(audience?: string, hour?: number, lesson?: Lesson | null) {
-    setModal({ open: true, audience, hour, lesson: lesson ?? null });
-  }
-  function closeModal() {
-    setModal({ open: false, audience: undefined, hour: undefined, lesson: null });
-  }
-  function saveLesson(payload: Partial<Lesson> & { id?: string }) {
-    if (payload.id) {
-      setLessons((prev) => prev.map((p) => (p.id === payload.id ? ({ ...p, ...payload } as Lesson) : p)));
-    } else {
-      const newL: Lesson = {
-        id: `l_${Date.now()}`,
-        audience: (payload.audience as string) || modal.audience || audiences[0],
-        startHour: payload.startHour ?? modal.hour ?? startHour,
-        durationHours: payload.durationHours ?? 1,
-        teacherId: payload.teacherId ?? currentUser?.id ?? 'system',
-        studentName: payload.studentName ?? '—',
-        status: (payload as any).status ?? 'scheduled',
-        createdBy: currentUser?.id ?? 'system',
-        createdAt: new Date().toISOString(),
-      };
-      setLessons((prev) => [...prev, newL]);
-    }
-    closeModal();
-  }
+  // build grid CSS template columns
+  const gridTemplateColumns = widths.map((w) => `${w}px`).join(' ');
 
   return (
     <div className="w-full">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-sm text-gray-600">Расписание</div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setScale((s) => Math.max(0.5, +(s - 0.1).toFixed(2)))} className="px-2 py-1 border rounded">
-            −
-          </button>
-          <div className="text-sm px-2">{Math.round(scale * 100)}%</div>
-          <button onClick={() => setScale((s) => Math.min(2, +(s + 0.1).toFixed(2)))} className="px-2 py-1 border rounded">
-            +
-          </button>
-        </div>
-      </div>
+      <ScheduleControls
+        scale={scale}
+        setScale={(v) => { setScale(v); if (!fitToScreen) setFitToScreen(false); }}
+        fitToScreen={fitToScreen}
+        setFitToScreen={setFitToScreen}
+        resetColumns={resetColumns}
+      />
 
-      <div className="overflow-auto border rounded" style={{ transform: `scale(${scale})`, transformOrigin: 'left top' }}>
-        <table className="schedule-table w-max border-collapse" style={{ borderSpacing: 0 }}>
-          <colgroup>{sequence.map((_, i) => <col key={i} style={{ width: `${colWidths[i]}px` }} />)}</colgroup>
-          <thead className="sticky top-0 bg-white">
-            <tr>
-              {sequence.map((col, i) =>
-                col.type === 'time' ? (
-                  <th key={i} className="p-2 text-left text-sm font-medium border-b border-r bg-gray-50">Время</th>
-                ) : (
-                  <th key={i} className="p-2 text-left text-sm font-medium border-b border-r bg-gray-50 relative">
-                    <div className="flex items-center justify-between">
-                      <div className="truncate">{col.key}</div>
-                      <div
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          startResize(i, e.clientX);
-                        }}
-                        className="absolute right-0 top-0 h-full w-2 cursor-col-resize"
-                        title="Изменить ширину"
-                      />
-                    </div>
-                  </th>
-                )
-              )}
-            </tr>
-          </thead>
+      <div ref={containerRef} className="relative w-full overflow-auto border rounded" style={{ minHeight: 300 }}>
+        {/* wrapper to scale */}
+        <div
+          className="origin-top-left"
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: '0 0',
+          }}
+        >
+          {/* grid headers */}
+          <div
+            className="grid items-stretch"
+            style={{
+              gridTemplateColumns,
+            }}
+          >
+            {/* header row */}
+            {columns.map((col, ci) => (
+              <div
+                key={`h-${ci}`}
+                className={`p-2 text-sm font-medium bg-gray-50 border-r border-b flex items-center justify-center relative`}
+                style={{ minHeight: 36 }}
+              >
+                {col.type === 'time' ? 'Время' : `Аудитория ${col.audience}`}
+                {/* resizer placed to the RIGHT of this column if next exists */}
+                {ci < columns.length - 1 && (
+                  <div
+                    onMouseDown={(e) => onResizerMouseDown(ci, e)}
+                    className="absolute right-0 top-0 bottom-0 w-2 -mr-1 cursor-col-resize"
+                    style={{ zIndex: 50 }}
+                    title="Изменить ширину"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
 
-          <tbody>
+          {/* body rows */}
+          <div>
             {hours.map((hour) => (
-              <tr key={hour} style={{ height: ROW_HEIGHT }}>
-                {sequence.map((col, ci) => {
+              <div
+                key={`row-${hour}`}
+                className="grid"
+                style={{
+                  gridTemplateColumns,
+                  // each row's height (you can adjust)
+                }}
+              >
+                {columns.map((col, ci) => {
                   if (col.type === 'time') {
                     return (
-                      <td key={ci} className="p-2 border-r border-b bg-gray-50 text-sm font-medium sticky left-0">
-                        {String(hour).padStart(2, '0')}:00
-                      </td>
+                      <div
+                        key={`cell-${hour}-${ci}`}
+                        className="p-2 border-r border-b bg-white text-sm flex items-center justify-center sticky left-0"
+                        style={{ minHeight: 56 }}
+                      >
+                        {`${hour}:00`}
+                      </div>
                     );
                   } else {
-                    const aud = col.key!;
-                    const covering = lessonCovering(aud, hour);
-                    if (covering) return null;
-                    const lesson = lessonStartAt(aud, hour);
-                    if (lesson) {
-                      const dur = Number(lesson.durationHours ?? 1);
-                      const teacher = teachers.find((t) => t.id === lesson.teacherId);
-                      const color = (teacher && (teacher as any).color) || hashToColor(lesson.teacherId || lesson.createdBy || lesson.id);
-                      return (
-                        <td key={ci} rowSpan={dur} className="p-2 align-top cursor-pointer" onClick={() => openModal(aud, hour, lesson)}>
-                          <div className="h-full rounded-md shadow-sm" style={{ background: `${color}22`, border: `2px solid ${color}` }}>
-                            <div className="p-2">
-                              <div className="text-sm font-semibold" style={{ color }}>{lesson.studentName}</div>
-                              <div className="text-xs text-gray-600">{teacher?.name ?? '—'}</div>
-                              <div className="text-xs text-gray-500 mt-1">{`${hour}:00 — ${hour + dur}:00`}</div>
-                              <div className="text-xs mt-2 text-gray-600">Аудитория: {aud}</div>
+                    const aud = col.audience!;
+                    const lesson = lessonAt(aud, hour);
+                    const isCancelled = lesson?.status === 'cancelled' || lesson?.status === 'canceled';
+                    const bg = lesson ? (isCancelled ? '#fee2e2' : teacherColor(lesson.teacherId)) : 'transparent';
+                    const textColor = lesson ? '#fff' : '#111827';
+                    return (
+                      <div
+                        key={`cell-${hour}-${aud}-${ci}`}
+                        onClick={() => handleCellClick(aud, hour, lesson)}
+                        className={`p-2 border-r border-b text-sm cursor-pointer select-none`}
+                        style={{
+                          minHeight: 56,
+                          background: lesson ? bg : 'transparent',
+                          color: lesson ? textColor : undefined,
+                        }}
+                        title={lesson ? `${lesson.studentName} — ${lesson.teacherId}` : `Свободно — ${aud} ${hour}:00`}
+                      >
+                        {lesson ? (
+                          <div className="flex flex-col">
+                            <div className="font-semibold truncate">{lesson.studentName || '—'}</div>
+                            <div className="text-xs truncate opacity-90">
+                              {teachers.find((t) => t.id === lesson.teacherId)?.name ?? lesson.teacherId}
+                              {lesson.durationHours ? ` • ${lesson.durationHours}ч` : ''}
+                              {lesson.status === 'transfer' && ' ⏱'}
+                              {lesson.status === 'cancelled' && ' ❌'}
                             </div>
                           </div>
-                        </td>
-                      );
-                    }
-                    return (
-                      <td key={ci} className="p-2 border-r border-b" onClick={() => openModal(aud, hour, null)}>
-                        <div className="h-full min-h-[48px]" />
-                      </td>
+                        ) : (
+                          <div className="text-xs text-gray-500">—</div>
+                        )}
+                      </div>
                     );
                   }
                 })}
-              </tr>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </div>
 
-      {/* Легенда */}
-      <div className="mt-4 bg-white p-4 rounded shadow">
-        <h3 className="text-sm font-medium mb-3">Легенда — педагоги</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {teachers.map((t) => {
-            const col = teacherColors.get(t.id) || hashToColor(t.id || t.name || '');
-            return (
-              <div key={t.id} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: col, color: 'white' }}>
-                  🎤
+          {/* legend / teachers colors */}
+          <div className="mt-4 p-3 bg-white border rounded">
+            <div className="text-sm font-medium mb-2">Легенда — педагоги</div>
+            <div className="flex flex-wrap gap-2">
+              {teachers.map((t) => (
+                <div key={t.id} className="flex items-center gap-2 px-2 py-1 border rounded">
+                  <div style={{ width: 16, height: 16, background: t.color ?? '#9ca3af', borderRadius: 4 }} />
+                  <div className="text-sm">{t.name} {t.directions ? `• ${t.directions.join(', ')}` : ''}</div>
                 </div>
-                <div>
-                  <div className="text-sm font-medium">{t.name}</div>
-                  <div className="text-xs text-gray-500">{(t.directions || []).join(', ')}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Modal */}
-      {modal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={closeModal} />
-          <div className="relative bg-white rounded-lg p-6 w-[420px] z-10 shadow-lg">
-            <h4 className="text-lg font-semibold mb-3">{modal.lesson ? 'Редактировать занятие' : 'Создать занятие'}</h4>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-gray-600">Аудитория</label>
-                <select id="aud-select" defaultValue={modal.audience} className="w-full px-3 py-2 border rounded mt-1">
-                  {audiences.map((a) => <option key={a} value={a}>{a}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">Час начала</label>
-                <select id="hour-select" defaultValue={String(modal.hour ?? startHour)} className="w-full px-3 py-2 border rounded mt-1">
-                  {Array.from({ length: endHour - startHour }).map((_, i) => {
-                    const h = startHour + i;
-                    return <option key={h} value={String(h)}>{String(h).padStart(2, '0')}:00</option>;
-                  })}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">Длительность (ч)</label>
-                <input id="duration-input" defaultValue={(modal.lesson?.durationHours ?? 1).toString()} type="number" min={1} max={8} className="w-full px-3 py-2 border rounded mt-1"/>
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">Ученик</label>
-                <input id="student-input" defaultValue={modal.lesson?.studentName ?? ''} className="w-full px-3 py-2 border rounded mt-1"/>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 mt-4">
-                <button onClick={closeModal} className="px-3 py-2 border rounded">Отмена</button>
-                <button onClick={() => {
-                  const aud = (document.getElementById('aud-select') as HTMLSelectElement).value;
-                  const hr = Number((document.getElementById('hour-select') as HTMLSelectElement).value);
-                  const dur = Number((document.getElementById('duration-input') as HTMLInputElement).value || 1);
-                  const student = (document.getElementById('student-input') as HTMLInputElement).value || '—';
-                  if (modal.lesson) {
-                    saveLesson({ id: modal.lesson.id, audience: aud, startHour: hr, durationHours: dur, studentName: student });
-                  } else {
-                    saveLesson({ audience: aud, startHour: hr, durationHours: dur, studentName: student, teacherId: currentUser?.id });
-                  }
-                }} className="px-4 py-2 bg-indigo-600 text-white rounded">Сохранить</button>
-              </div>
+              ))}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* BookingModal — показываем при клике */}
+      {openModal && modalData && (
+        <BookingModal
+          open={openModal}
+          onClose={() => setOpenModal(false)}
+          initialSlot={modalData.audience ? { audience: modalData.audience, hour: modalData.hour } : undefined}
+          initialLesson={modalData.lesson ?? undefined}
+          teachers={teachers}
+          audiences={audiences}
+          startHour={startHour}
+          endHour={endHour}
+          onSave={(lesson) => {
+            // интеграция: здесь вы должны сохранить урок через API / lib
+            console.log('save lesson', lesson);
+            setOpenModal(false);
+          }}
+          onDelete={(id) => {
+            console.log('delete', id);
+            setOpenModal(false);
+          }}
+        />
       )}
     </div>
   );
-                    }
+                                                           }

@@ -1,0 +1,38 @@
+/* ---- Schedule specific styles ---- */
+.grid {
+  /* border collapse like table */
+}
+
+/* маленькая подсветка при наведении */
+.components-schedule .cell:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Resizer handle (visual) */
+.cursor-col-resize {
+  cursor: col-resize;
+}
+
+/* make legend chips look nicer */
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ensure sticky left columns (if ever needed) */
+.sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  background: white;
+}
+
+/* general reset for schedule container */
+.schedule-wrapper {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

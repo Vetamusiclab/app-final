@@ -1,41 +1,43 @@
 // lib/schedule.ts
-import type { Lesson as LessonType } from '@/types/lesson';
-export type { Lesson as LessonType } from '@/types/lesson';
+import type { Lesson } from '@/types/lesson';
+export type { Lesson } from '@/types/lesson';
 
 /**
- * Небольшая утилита для генерации id (демо)
+ * Список аудиторий (именованный экспорт) — не readonly, чтобы TypeScript не ругался
+ * Можно расширять в будущем (админ будет добавлять новые).
  */
+export const AUDIENCES: string[] = ['216', '222', '223', '244', '260', '11A'];
+
+/** Генератор простых id для демо */
 function makeId(prefix = 'ls'): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 /**
- * Нормализует lesson: гарантируем поле audience (поддерживаем legacy auditorium)
+ * Нормализация lesson — гарантируем поле audience,
+ * поддерживаем legacy-поле auditorium.
  */
-function normalizeLesson(input: Partial<LessonType> & { auditorium?: string }): LessonType {
-  // создаём объект LessonType, подставляя дефолты
-  const audience = input.audience ?? input.auditorium ?? (input as any).audience ?? '';
-  const l: LessonType = {
-    id: input.id ?? makeId(),
+function normalizeLesson(raw: Partial<Lesson> & { auditorium?: string }): Lesson {
+  const audience = raw.audience ?? raw.auditorium ?? (raw as any).audience ?? '';
+  return {
+    id: raw.id ?? makeId(),
+    // положим оба поля для совместимости (audience каноническое)
     audience,
-    auditorium: input.auditorium ?? input.audience ?? audience,
-    startHour: input.startHour ?? 9,
-    durationHours: input.durationHours ?? 1,
-    teacherId: input.teacherId ?? '',
-    studentName: input.studentName ?? '',
-    status: input.status ?? undefined,
-    createdBy: input.createdBy ?? undefined,
-    createdAt: input.createdAt ?? new Date().toISOString(),
+    auditorium: raw.auditorium ?? raw.audience ?? audience,
+    startHour: raw.startHour ?? 9,
+    durationHours: raw.durationHours ?? 1,
+    teacherId: raw.teacherId ?? '',
+    studentName: raw.studentName ?? '',
+    status: raw.status ?? undefined,
+    createdBy: raw.createdBy ?? undefined,
+    createdAt: raw.createdAt ?? new Date().toISOString(),
   };
-  return l;
 }
 
-/**
- * Демонстрационные уроки
- */
-export const demoLessons: LessonType[] = [
+/** Демонстрационные уроки */
+export const demoLessons: Lesson[] = [
   normalizeLesson({
-    id: 'l1',
+    id: 'l_1',
     audience: '216',
     startHour: 10,
     durationHours: 1,
@@ -43,12 +45,12 @@ export const demoLessons: LessonType[] = [
     studentName: 'Иван Петров',
     status: 'ok',
     createdBy: 't1',
-    createdAt: '2024-08-01T10:00:00.000Z',
+    createdAt: new Date().toISOString(),
   }),
   normalizeLesson({
-    id: 'l2',
+    id: 'l_2',
     audience: '222',
-    startHour: 11,
+    startHour: 12,
     durationHours: 1,
     teacherId: 't2',
     studentName: 'Анна Смирнова',
@@ -58,42 +60,40 @@ export const demoLessons: LessonType[] = [
   }),
 ];
 
-/**
- * Асинхронные хелперы (имитируют запросы)
- */
-export function getAllLessons(): Promise<LessonType[]> {
-  // возвращаем копию массива (чтобы не мутировать напрямую)
-  return Promise.resolve(demoLessons.map((d) => ({ ...d })));
+/** Асинхронные хелперы для работы с уроками */
+export function getAllLessons(): Promise<Lesson[]> {
+  // возвращаем копию
+  return Promise.resolve(demoLessons.map(l => ({ ...l })));
 }
 
-export function getLessonById(id: string): Promise<LessonType | undefined> {
-  return Promise.resolve(demoLessons.find((l) => l.id === id));
+export function getLessonById(id: string): Promise<Lesson | undefined> {
+  return Promise.resolve(demoLessons.find(l => l.id === id));
 }
 
-export function addLesson(raw: Partial<LessonType> & { auditorium?: string }): Promise<LessonType> {
+export function addLesson(raw: Partial<Lesson> & { auditorium?: string }): Promise<Lesson> {
   const l = normalizeLesson(raw);
   demoLessons.push(l);
   return Promise.resolve(l);
 }
 
-export function updateLesson(id: string, patch: Partial<LessonType> & { auditorium?: string }): Promise<LessonType | null> {
-  const idx = demoLessons.findIndex((l) => l.id === id);
+export function updateLesson(id: string, patch: Partial<Lesson> & { auditorium?: string }): Promise<Lesson | null> {
+  const idx = demoLessons.findIndex(l => l.id === id);
   if (idx === -1) return Promise.resolve(null);
   const merged = { ...demoLessons[idx], ...patch };
-  // normalized audience/auditorium
-  const normalized = normalizeLesson(merged as Partial<LessonType> & { auditorium?: string });
+  const normalized = normalizeLesson(merged as Partial<Lesson> & { auditorium?: string });
   demoLessons[idx] = normalized;
   return Promise.resolve(normalized);
 }
 
 export function deleteLesson(id: string): Promise<boolean> {
-  const idx = demoLessons.findIndex((l) => l.id === id);
+  const idx = demoLessons.findIndex(l => l.id === id);
   if (idx === -1) return Promise.resolve(false);
   demoLessons.splice(idx, 1);
   return Promise.resolve(true);
 }
 
 export default {
+  AUDIENCES,
   demoLessons,
   getAllLessons,
   getLessonById,

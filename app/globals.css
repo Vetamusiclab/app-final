@@ -1,62 +1,38 @@
-/* app/globals.css */
-
-/* Tailwind base (если у тебя установлен и настроен Tailwind) */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Reset + базовые шрифты */
-* {
-  box-sizing: border-box;
+/* ---- Schedule specific styles ---- */
+.grid {
+  /* border collapse like table */
 }
 
-html, body, #__next {
-  height: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* маленькая подсветка при наведении */
+.components-schedule .cell:hover {
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
-/* Таблица расписания — явная сетка и вид "excel" */
-.schedule-table {
-  border-collapse: collapse;
-  font-family: inherit;
+/* Resizer handle (visual) */
+.cursor-col-resize {
+  cursor: col-resize;
+}
+
+/* make legend chips look nicer */
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ensure sticky left columns (if ever needed) */
+.sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 40;
   background: white;
 }
 
-/* общие границы ячеек */
-.schedule-table th,
-.schedule-table td {
-  border: 1px solid rgba(0,0,0,0.08);
-  vertical-align: top;
+/* general reset for schedule container */
+.schedule-wrapper {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-
-/* header sticky */
-.schedule-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: #ffffff;
-}
-
-/* левый (временной) столбец дополнительный класс, делаем его контрастнее */
-.schedule-table td.sticky-time {
-  background: #fbfbfb;
-  font-weight: 600;
-}
-
-/* резайзер курсор (в th есть элемент .cursor-col-resize) */
-.cursor-col-resize {
-  touch-action: none;
-}
-
-/* hover для интерактивных ячеек */
-.schedule-table td.cursor-pointer:hover {
-  background: rgba(99,102,241,0.06);
-}
-
-/* modal простая стилизация */
-.fixed {
-  /* tailwind already defines */
-}
-
-/* если нужно — можно добавить дополнительные мелкие стили ниже */

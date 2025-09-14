@@ -1,42 +1,53 @@
-// components/schedule/ScheduleControls.tsx
 'use client';
 
 import React from 'react';
 
 type Props = {
   scale: number;
-  setScale: (n: number) => void; // принимает число
-  fitToScreen: () => void;
+  setScale: (v: number) => void;
+  fitToScreen: boolean;
+  setFitToScreen: (b: boolean) => void;
+  resetColumns?: () => void;
 };
 
-export default function ScheduleControls({ scale, setScale, fitToScreen }: Props) {
+export default function ScheduleControls({ scale, setScale, fitToScreen, setFitToScreen, resetColumns }: Props) {
+  const dec = () => setScale(Math.max(0.3, +(Math.round((scale - 0.1) * 100) / 100).toFixed(2)));
+  const inc = () => setScale(Math.min(2.5, +(Math.round((scale + 0.1) * 100) / 100).toFixed(2)));
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 mb-3">
       <div className="flex items-center gap-2">
         <button
-          onClick={() => setScale(Math.max(0.4, Number((scale - 0.1).toFixed(2))))}
-          className="px-3 py-1 border rounded"
+          onClick={dec}
           aria-label="Уменьшить масштаб"
+          className="px-3 py-1 border rounded hover:bg-gray-50"
         >
           −
         </button>
-
-        <div className="text-sm px-2">Масштаб: {(scale * 100).toFixed(0)}%</div>
-
+        <div className="px-3 py-1 border rounded text-sm">{Math.round(scale * 100)}%</div>
         <button
-          onClick={() => setScale(Math.min(2, Number((scale + 0.1).toFixed(2))))}
-          className="px-3 py-1 border rounded"
+          onClick={inc}
           aria-label="Увеличить масштаб"
+          className="px-3 py-1 border rounded hover:bg-gray-50"
         >
           +
         </button>
       </div>
 
-      <button onClick={fitToScreen} className="px-3 py-1 border rounded">
-        Подогнать под экран
-      </button>
+      <label className="flex items-center gap-2 select-none">
+        <input
+          type="checkbox"
+          checked={fitToScreen}
+          onChange={(e) => setFitToScreen(e.target.checked)}
+        />
+        <span className="text-sm">Подогнать по экрану</span>
+      </label>
 
-      <div className="text-xs text-gray-500 ml-4">Перетяните границу заголовка аудитории для изменения ширины столбца.</div>
+      {resetColumns && (
+        <button onClick={resetColumns} className="ml-2 px-3 py-1 border rounded text-sm">
+          Сброс размеров
+        </button>
+      )}
     </div>
   );
 }

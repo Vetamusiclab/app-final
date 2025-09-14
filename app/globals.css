@@ -1,228 +1,62 @@
-/* app/globals.css
-   Полный глобальный стиль для проекта MusicLab.
-   Содержит:
-   - Tailwind preflight (base/components/utilities)
-   - CSS-переменные бренда
-   - базовый сброс и типографику (использует переменные next/font)
-   - утилиты для кнопок, модалей, аватаров, ресайзера колонок расписания и т.д.
-*/
+/* app/globals.css */
 
-/* === Tailwind: базовые слои === */
+/* Tailwind base (если у тебя установлен и настроен Tailwind) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* === Brand variables === */
-:root {
-  /* Брендовые цвета (можешь заменить на конкретные значения) */
-  --brand-orange: #ff8a00;    /* primary */
-  --brand-orange-600: #e76f00;
-  --brand-purple: #7c3aed;    /* secondary */
-  --brand-text: #111111;
-  --muted: #6b7280;
-  --bg-surface: #ffffff;
-  --glass: rgba(255,255,255,0.6);
-
-  /* layout / sizes */
-  --radius-lg: 12px;
-  --radius-sm: 8px;
-  --transition-fast: 160ms;
-  --transition-base: 220ms;
+/* Reset + базовые шрифты */
+* {
+  box-sizing: border-box;
 }
 
-/* === Base reset / typography === */
-/* Tailwind preflight уже делает большую часть сброса.
-   Добавим шрифты, переменные от next/font и небольшие удобства. */
 html, body, #__next {
   height: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--bg-surface);
-  color: var(--brand-text);
-  margin: 0;
 }
 
-/* Используем шрифтовые переменные, которые задаются в layout через next/font:
-   — --font-roboto
-   — --font-pt-sans
-   Если у тебя другие имена переменных — подправь. */
-body {
-  font-family: var(--font-roboto, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial);
-  line-height: 1.45;
-  font-size: 16px;
-  background: linear-gradient(180deg, rgba(124,58,237,0.02), rgba(99,102,241,0.01));
-}
-
-/* Заголовки по умолчанию могут использовать вторичный шрифт */
-h1, h2, h3, h4 {
-  font-family: var(--font-pt-sans, var(--font-roboto));
-  color: var(--brand-text);
-  margin: 0;
-}
-
-/* Центровка основного контейнера (если нужен) */
-main {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-/* === Простые утилиты (если не хотите менять tailwind config) === */
-.bg-primary { background-color: var(--brand-orange) !important; }
-.bg-primary-600 { background-color: var(--brand-orange-600) !important; }
-.text-primary { color: var(--brand-orange) !important; }
-.border-muted { border-color: var(--muted) !important; }
-
-/* Кнопки */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  border-radius: var(--radius-lg);
-  font-weight: 600;
-  transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-  cursor: pointer;
-}
-.btn:active { transform: translateY(1px); }
-.btn:focus { outline: 3px solid rgba(124,58,237,0.12); outline-offset: 2px; }
-
-.btn-primary {
-  background: var(--brand-orange);
-  color: white;
-  border: 1px solid rgba(0,0,0,0.03);
-  box-shadow: 0 6px 18px rgba(17,24,39,0.06);
-}
-.btn-primary:hover { background: var(--brand-orange-600); }
-
-.btn-ghost {
-  background: transparent;
-  border: 1px solid rgba(0,0,0,0.06);
-  color: var(--brand-text);
-}
-
-/* Кард */
-.card {
-  background: white;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 6px 18px rgba(17,24,39,0.04);
-  padding: 1rem;
-}
-
-/* Модальные оверлеи и центрирование */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 60;
-}
-.modal {
-  width: min(720px, 96%);
-  background: white;
-  border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 30px 60px rgba(2,6,23,0.3);
-}
-
-/* Spinner — используется в расписании */
-.spinner {
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  border: 4px solid rgba(0,0,0,0.08);
-  border-top-color: rgba(0,0,0,0.24);
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Аватар */
-.avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 9999px;
-  background: #f3f4f6;
-}
-
-/* Роль-карточки (выбор роли на стартовом экране) */
-.role-card {
-  display: inline-flex;
-  gap: .75rem;
-  align-items: center;
-  padding: .8rem 1rem;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.8);
-  box-shadow: 0 8px 20px rgba(2,6,23,0.04);
-  transition: transform var(--transition-base) ease, box-shadow var(--transition-base) ease;
-  cursor: pointer;
-}
-.role-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(2,6,23,0.06); }
-.role-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: inline-grid;
-  place-items: center;
-  background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(7,89,133,0.06));
-}
-
-/* Schedule specific helpers (resizer handle) */
-.col-resizer {
-  position: absolute;
-  right: -4px;
-  top: 0;
-  width: 8px;
-  height: 100%;
-  cursor: col-resize;
-  z-index: 5;
-}
-
-/* Анимация нажатия (краткое scale) */
-.pressed {
-  transform: scale(.97);
-  transition: transform 120ms ease;
-}
-
-/* Тонкие стили для таблиц/табличных блоков */
-.table-like {
-  width: 100%;
+/* Таблица расписания — явная сетка и вид "excel" */
+.schedule-table {
   border-collapse: collapse;
-}
-.table-like th, .table-like td {
-  padding: .6rem .75rem;
-  border-bottom: 1px solid rgba(15,23,42,0.04);
+  font-family: inherit;
+  background: white;
 }
 
-/* Утилиты отклонить/подтвердить (красный/зелёный) */
-.badge-danger { color: #b91c1c; }
-.badge-ghost { color: var(--muted); }
-
-/* Мелкие удобства */
-.container-wide { max-width: 1300px; margin: 0 auto; padding: 2rem; }
-.small { font-size: .875rem; }
-.xs { font-size: .75rem; }
-
-/* Сбрасываем некоторые негативные default-ы */
-a { color: inherit; text-decoration: none; }
-button { font-family: inherit; }
-
-/* === Accessibility helpers === */
-.sr-only {
-  position: absolute !important;
-  height: 1px; width: 1px;
-  overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px);
-  white-space: nowrap;
+/* общие границы ячеек */
+.schedule-table th,
+.schedule-table td {
+  border: 1px solid rgba(0,0,0,0.08);
+  vertical-align: top;
 }
 
-/* === Дополнительно: медиа-правила для отзывчивости === */
-@media (max-width: 768px) {
-  main { padding: 1.25rem; }
-  .role-card { padding: .6rem .8rem; gap: .5rem; }
-  .role-icon { width: 36px; height: 36px; border-radius: 8px; }
+/* header sticky */
+.schedule-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #ffffff;
 }
+
+/* левый (временной) столбец дополнительный класс, делаем его контрастнее */
+.schedule-table td.sticky-time {
+  background: #fbfbfb;
+  font-weight: 600;
+}
+
+/* резайзер курсор (в th есть элемент .cursor-col-resize) */
+.cursor-col-resize {
+  touch-action: none;
+}
+
+/* hover для интерактивных ячеек */
+.schedule-table td.cursor-pointer:hover {
+  background: rgba(99,102,241,0.06);
+}
+
+/* modal простая стилизация */
+.fixed {
+  /* tailwind already defines */
+}
+
+/* если нужно — можно добавить дополнительные мелкие стили ниже */

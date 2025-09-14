@@ -1,22 +1,22 @@
 // types/lesson.ts
 export type LessonStatus =
   | 'scheduled'
+  | 'confirmed'
   | 'ok'
   | 'cancelled'
-  | 'confirmed'
-  | 'transfered'
-  | 'pending'
-  | 'done';
+  | 'transfer';
 
-export type Lesson = {
+export interface Lesson {
   id: string;
-  // используем поле audience — единообразно по всему коду
-  audience: string;
-  startHour: number; // целое значение часа (например 9)
-  durationHours?: number; // продолжительность в часах (1,2...)
+  // Каноническое поле — используйте audience везде в коде.
+  audience?: string;
+  // legacy alias — чтобы старые объекты с 'auditorium' тоже проходили проверку типов.
+  auditorium?: string;
+  startHour: number; // например 9, 10, ...
+  durationHours: number; // например 1, 1.5 и т.д.
   teacherId: string;
-  studentName: string;
+  studentName?: string;
   status?: LessonStatus;
   createdBy?: string;
   createdAt?: string;
-};
+}

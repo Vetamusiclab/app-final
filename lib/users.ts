@@ -1,7 +1,29 @@
 // lib/users.ts
-import type { User } from '@/types/user';
+import type { User as UserType } from '@/types/user';
 
-export const demoUsers: User[] = [
+// реэкспорт типа, чтобы компоненты могли импортировать и из lib/users
+export type { User as UserType } from '@/types/user';
+
+// Демонстрационные пользователи
+export const demoUsers: UserType[] = [
+  {
+    id: 'stu1',
+    role: 'student',
+    name: 'Иван Петров',
+    avatar: '/avatars/default.png',
+    directions: ['Гитара', 'Вокал'],
+    phone: '+7 999 111 22 33',
+    createdAt: '2024-08-01',
+  },
+  {
+    id: 'stu2',
+    role: 'student',
+    name: 'Анна Смирнова',
+    avatar: '/avatars/default.png',
+    directions: ['Фортепиано'],
+    phone: '+7 999 222 33 44',
+    createdAt: '2024-09-02',
+  },
   {
     id: 't1',
     role: 'teacher',
@@ -10,27 +32,8 @@ export const demoUsers: User[] = [
     directions: ['Вокал'],
     phone: '+7 900 555 66 77',
     createdAt: '2020-02-14',
-    color: '#FF6F00' // основной бренд — оранжевый
-  },
-  {
-    id: 't2',
-    role: 'teacher',
-    name: 'Алексей Смирнов',
-    avatar: '/avatars/default.png',
-    directions: ['Гитара'],
-    phone: '+7 900 111 22 33',
-    createdAt: '2021-05-10',
-    color: '#6BCB77' // акцентный зелёный
-  },
-  {
-    id: 't3',
-    role: 'teacher',
-    name: 'Мария Иванова',
-    avatar: '/avatars/default.png',
-    directions: ['Фортепиано'],
-    phone: '+7 900 222 33 44',
-    createdAt: '2022-01-12',
-    color: '#6FA8FF' // синий
+    // можно добавить цвет для заливки расписания:
+    // color: '#7c3aed',
   },
   {
     id: 'a1',
@@ -39,23 +42,29 @@ export const demoUsers: User[] = [
     avatar: '/avatars/default.png',
     phone: '+7 900 000 00 00',
     createdAt: '2019-01-01',
-    color: '#000000'
   },
-  {
-    id: 's1',
-    role: 'student',
-    name: 'Иван Петров',
-    avatar: '/avatars/default.png',
-    directions: ['Гитара'],
-    phone: '+7 999 111 22 33',
-    createdAt: '2024-08-01'
-  }
 ];
 
-export function getAllUsers(): Promise<User[]> {
+// Асинхронные хелперы (имитируют работу с сервером)
+export function getAllUsers(): Promise<UserType[]> {
   return Promise.resolve(demoUsers);
 }
 
-export function getUserById(id: string) {
+export function getUserById(id: string): Promise<UserType | undefined> {
   return Promise.resolve(demoUsers.find((u) => u.id === id));
 }
+
+// Утилиты работы с демо-данными (локальное редактирование)
+export async function addUser(user: UserType): Promise<UserType> {
+  demoUsers.push(user);
+  return user;
+}
+
+export async function deleteUser(id: string): Promise<boolean> {
+  const idx = demoUsers.findIndex((u) => u.id === id);
+  if (idx === -1) return false;
+  demoUsers.splice(idx, 1);
+  return true;
+}
+
+export default demoUsers;

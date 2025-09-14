@@ -1,34 +1,52 @@
 // lib/lessons.ts
 import type { Lesson } from '@/types/lesson';
 
-// Демонстрационные уроки — можно позже заменить хранением в БД.
-export const demoLessons: Lesson[] = [
+function makeId(prefix = 'l') {
+  return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/**
+ * Демонстрационные уроки.
+ * Используем поле `audience` (и при необходимости можно поставить auditorium: same)
+ */
+export const lessons: Lesson[] = [
   {
-    id: 'lesson-1',
-    teacherId: 't1',
-    studentName: 'Иван Петров',
-    auditorium: '216',
+    id: makeId(),
+    audience: '216',
+    // auditorium: '216', // не обязательно; поле поддерживается типом
     startHour: 10,
     durationHours: 1,
+    teacherId: 't1',
+    studentName: 'Иван Петров',
     status: 'ok',
-    createdBy: 'a1',
+    createdBy: 't1',
+    createdAt: new Date().toISOString(),
   },
   {
-    id: 'lesson-2',
-    teacherId: 't1',
+    id: makeId(),
+    audience: '222',
+    startHour: 11,
+    durationHours: 1,
+    teacherId: 't2',
     studentName: 'Анна Смирнова',
-    auditorium: '222',
-    startHour: 12,
-    durationHours: 2,
-    status: 'transfer',
-    createdBy: 't1',
+    status: 'confirmed',
+    createdBy: 'a1',
+    createdAt: new Date().toISOString(),
   },
 ];
 
-export function getAllLessons(): Promise<Lesson[]> {
-  return Promise.resolve(demoLessons);
+export function getAllLessons(): Lesson[] {
+  return lessons;
 }
 
-export function getLessonById(id: string): Promise<Lesson | undefined> {
-  return Promise.resolve(demoLessons.find((l) => l.id === id));
+export function addLesson(lesson: Lesson): Lesson {
+  lessons.push(lesson);
+  return lesson;
+}
+
+export function deleteLesson(id: string): boolean {
+  const idx = lessons.findIndex((l) => l.id === id);
+  if (idx === -1) return false;
+  lessons.splice(idx, 1);
+  return true;
 }
